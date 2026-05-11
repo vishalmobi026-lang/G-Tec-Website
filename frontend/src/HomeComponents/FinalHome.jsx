@@ -5,6 +5,10 @@ import {
   MousePointer2, ChevronDown, Share2, GripVertical, Eye, Frame, Square,
   AlignLeft, AlignCenter, AlignRight, Link2   
 } from "lucide-react";
+import { Link } from "react-router-dom";
+
+const MotionLink = motion(Link);
+
 
 export default function CreativeWorkflowSection() {
     const img = ["/cr1.jpg", "/cr2.jpg", "/cr3.jpg"];
@@ -29,9 +33,9 @@ export default function CreativeWorkflowSection() {
             Effortlessly create stunning visual content with our integrated suite of design tools. Enhance collaboration and speed up delivery times across your entire team.
           </p>
 
-          <button className="relative group bg-blue-800 text-white text-xl font-bold px-10 py-4.5 rounded-2xl transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-[0_0_20px_rgba(29,112,242,0.3)] hover:shadow-[0_0_30px_rgba(29,112,242,0.5)]">
-            <span className="relative z-10">Get start now</span>
-          </button>
+          <MotionLink to="/about" className="relative group bg-blue-800 text-white text-xl font-bold px-10 py-4.5 rounded-2xl transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-[0_0_20px_rgba(29,112,242,0.3)] hover:shadow-[0_0_30px_rgba(29,112,242,0.5)]">
+            <span className="relative z-10">Get started now</span>
+          </MotionLink>
         </motion.div>
 
         <section className="w-full bg-white py-2 px-4 md:px-12 font-sans overflow-hidden">
