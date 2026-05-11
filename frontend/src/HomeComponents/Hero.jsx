@@ -21,6 +21,9 @@ import {
   SkipForward,
   Menu,
 } from "lucide-react";
+import { Link } from "react-router-dom";
+
+const MotionLink = motion(Link);
 
 export default function Hero() {
   const logos = [
@@ -135,14 +138,17 @@ export default function Hero() {
             variants={itemVariants}
             className="flex flex-col sm:flex-row items-center justify-center gap-4"
           >
-            <button className="group relative px-8 py-4 bg-blue-900 text-white rounded-full font-bold text-lg hover:bg-blue-800 transition-all flex items-center gap-2 shadow-xl shadow-blue-600">
+            <MotionLink to="/enroll" className="group relative px-8 py-4 bg-blue-900 text-white rounded-full font-bold text-lg hover:bg-blue-800 transition-all flex items-center gap-2 shadow-xl shadow-blue-600">
               Get Started — it's free
               <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-            </button>
+            </MotionLink>
 
-            <button className="px-8 py-4 bg-white text-gray-900 border border-gray-200 rounded-full font-bold text-lg hover:bg-gray-50 transition-all flex items-center gap-2">
+            <MotionLink
+              to="/courses"
+              className="px-8 py-4 bg-white text-gray-900 border border-gray-200 rounded-full font-bold text-lg hover:bg-gray-50 transition-all flex items-center gap-2"
+            >
               View Courses <ArrowUpRight className="w-5 h-5" />
-            </button>
+            </MotionLink>
           </motion.div>
         </motion.div>
 
