@@ -21,6 +21,8 @@ import {
 } from "lucide-react";
 import {Link} from 'react-router-dom';
 
+const MotionLink = motion(Link);
+
 const specializedCourses = [
   {
     title: "SAP ERP",
@@ -81,7 +83,7 @@ const SpecialAccounting = () => {
     },
   };
 
-  const path='/courses/accounting';
+  const path='/courses/:accounting';
 
   return (
     <>
@@ -141,9 +143,9 @@ const SpecialAccounting = () => {
               transition={{ duration: 0.5, delay: 0.6 }}
               className="relative mt-2 flex items-center pl-6 md:pl-8 pr-16 md:pr-20 py-3 md:py-4 bg-black text-white rounded-full font-bold text-base md:text-lg group overflow-hidden shadow-xl shadow-gray-200">
               {/* Text stays above the expanding background and changes to black on hover */}
-              <Link to={path} className="relative z-10 transition-colors duration-300 group-hover:text-black">
+              <MotionLink to={path} className="relative z-10 transition-colors duration-300 group-hover:text-black">
                 Explore Courses
-              </Link>
+              </MotionLink>
 
               {/* The expanding white circle background container */}
               <div className="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center justify-center w-10 h-10 md:w-12 md:h-12 bg-white rounded-full transition-all duration-300 group-hover:w-[calc(100%-0.75rem)] group-active:scale-95 z-0">
