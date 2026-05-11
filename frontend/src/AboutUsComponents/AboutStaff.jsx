@@ -1,8 +1,10 @@
 import React from "react";
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
+
+const MotionLink = motion(Link);
 
 export default function StaffSection() {
-   
   const staff = [
     {
       name: "Arun Kumar",
@@ -34,8 +36,8 @@ export default function StaffSection() {
     },
   ];
 
-   const text1="Meet Our Expert Team";
-    const words1=text1.split(" ");
+  const text1 = "Meet Our Expert Team";
+  const words1 = text1.split(" ");
 
   const container = {
     hidden: { opacity: 0 },
@@ -77,22 +79,20 @@ export default function StaffSection() {
             viewport={{ once: false }}
             className="flex flex-col gap-2 items-center text-center mas-w-3xl">
             <motion.h2
-            variants={container}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: false, amount: 0.2 }}
-            className="text-3xl md:text-5xl pt-10 py-20 lg:text-6xl font-clash text-blue-800 tracking-tighter leading-none mb-2 text-center font-medium flex justify-center flex-wrap gap-x-4"
-          >
-            {words1.map((word, index) => (
-              <motion.span
-                variants={child}
-                key={index}
-                className="inline-block"
-              >
-                {word}
-              </motion.span>
-            ))}
-          </motion.h2>
+              variants={container}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: false, amount: 0.2 }}
+              className="text-3xl md:text-5xl pt-10 py-20 lg:text-6xl font-clash text-blue-800 tracking-tighter leading-none mb-2 text-center font-medium flex justify-center flex-wrap gap-x-4">
+              {words1.map((word, index) => (
+                <motion.span
+                  variants={child}
+                  key={index}
+                  className="inline-block">
+                  {word}
+                </motion.span>
+              ))}
+            </motion.h2>
             <p className="text-gray-500 font-medium text-lg md:text-2xl w-200 leading-relaxed">
               A dedicated collective of industry veterans and passionate mentors
               committed to bridging the gap between classroom learning and your
@@ -101,7 +101,6 @@ export default function StaffSection() {
           </motion.div>
         </div>
 
-        {/* STAFF GRID */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-10">
           {staff.map((member, index) => (
             <motion.div
@@ -111,7 +110,6 @@ export default function StaffSection() {
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
               className="group flex flex-col shadow-black shadow-2xl p-2 rounded-3xl">
-              {/* Image with subtle hover zoom */}
               <div className="relative overflow-hidden rounded-3xl bg-gray-100 aspect-square mb-6">
                 <img
                   src={member.image}
@@ -120,7 +118,6 @@ export default function StaffSection() {
                 />
               </div>
 
-              {/* Text Details */}
               <div className="space-y-1 mb-6">
                 <h3 className="text-2xl font-bold text-gray-900">
                   {member.name}
@@ -130,7 +127,6 @@ export default function StaffSection() {
                 </p>
               </div>
 
-              {/* SOCIAL LINKS: Your requested format */}
               <div className="flex gap-4">
                 {[
                   { name: "instagram", color: "white" },
@@ -149,7 +145,6 @@ export default function StaffSection() {
                   </a>
                 ))}
 
-                {/* LinkedIn SVG format */}
                 <a
                   href="#"
                   className="p-2.5 bg-zinc-900 rounded-full hover:bg-zinc-800 transition-all border border-zinc-800 flex items-center justify-center">
@@ -170,7 +165,6 @@ export default function StaffSection() {
           viewport={{ once: true }}
           transition={{ duration: 0.8 }}
           className="my-24 w-full shadow-2xl shadow-blue-500 bg-blue-50 border border-blue-100/50 rounded-[2.5rem] p-8 md:p-16 lg:p-20 relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-10">
-          {/* Subtle background glow effect */}
           <div className="absolute top-0 right-0 w-1/2 h-full bg-white/40 blur-[80px] pointer-events-none" />
 
           <div className="relative z-10 max-w-2xl">
@@ -186,12 +180,39 @@ export default function StaffSection() {
           </div>
 
           <div className="relative z-10 shrink-0">
-            <motion.button
+            <MotionLink
+              to="/courses"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="px-10 py-5 bg-blue-600 text-white font-bold rounded-full text-lg hover:bg-blue-700 transition-all shadow-xl shadow-blue-600/20">
+              className="
+        relative z-10 flex justify-center gap-4 items-center mx-auto 
+        px-10 py-4 overflow-hidden rounded-full border-2 border-blue-600
+        bg-blue-600 text-white text-lg font-bold shadow-xl shadow-blue-600/20
+        group isolation-auto transition-all duration-700
+        
+        /* THE ANIMATED BACKGROUND SLIDE */
+        before:absolute before:aspect-square before:w-full before:-left-full 
+        before:hover:left-0 before:rounded-full before:bg-white 
+        before:transition-all before:duration-700 before:-z-10 
+        before:hover:scale-[2.5]
+        
+        /* TEXT COLOR CHANGE ON HOVER */
+        hover:text-white hover:border-blue-600
+      ">
               Explore Programs
-            </motion.button>
+              <svg
+                className="
+          w-8 h-8 p-2 rounded-full border border-white/30 rotate-45
+          group-hover:rotate-90 group-hover:bg-blue-600 group-hover:border-none 
+          transition-all duration-500 ease-in-out
+        "
+                viewBox="0 0 16 19"
+                xmlns="http://www.w3.org/2000/svg">
+                <path
+                  d="M7 18C7 18.5523 7.44772 19 8 19C8.55228 19 9 18.5523 9 18H7ZM8.70711 0.292893C8.31658 -0.0976311 7.68342 -0.0976311 7.29289 0.292893L0.928932 6.65685C0.538408 7.04738 0.538408 7.68054 0.928932 8.07107C1.31946 8.46159 1.95262 8.46159 2.34315 8.07107L8 2.41421L13.6569 8.07107C14.0474 8.46159 14.6805 8.46159 15.0711 8.07107C15.4616 7.68054 15.4616 7.04738 15.0711 6.65685L8.70711 0.292893ZM9 18L9 1H7L7 18H9Z"
+                  className="fill-white group-hover:fill-white"></path>
+              </svg>
+            </MotionLink>
           </div>
         </motion.div>
       </div>
