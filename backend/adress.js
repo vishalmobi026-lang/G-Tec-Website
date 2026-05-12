@@ -23,7 +23,7 @@ const apiLimiter = rateLimit({
 
 app.use('/api/', apiLimiter);
 
-const MONGO_URI = 'mongodb://127.0.0.1:27017/gtec_database';
+const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/gtec_database';
 const BACKEND_URL = process.env.BACKEND_URL;
 const nodemailer = require('nodemailer');
 const EMAIL_USER=process.env.EMAIL_USER;
