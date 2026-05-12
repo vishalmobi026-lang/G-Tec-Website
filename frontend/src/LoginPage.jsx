@@ -12,10 +12,11 @@ export default function LoginPage() {
 
   useEffect(() => {
   const token = localStorage.getItem("adminToken");
-  if (token) {
-    navigate("/admin/students");
+
+  if (token && window.location.pathname === "/login") {
+    navigate("/admin/students", { replace: true });
   }
-}, [navigate]);
+}, []);
 
   const handleLogin = async (e) => {
     e.preventDefault();
