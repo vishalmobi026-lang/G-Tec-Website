@@ -62,7 +62,7 @@ export default function LoginPage() {
 
         // ✅ Small delay prevents router race condition
         setTimeout(() => {
-          navigate("/admin/students", {
+          navigate("/", {
             replace: true,
           });
         }, 100);
