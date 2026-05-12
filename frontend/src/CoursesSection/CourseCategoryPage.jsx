@@ -10,7 +10,7 @@ import {
   BookOpen,
   Award
 } from "lucide-react";
-
+const API_BASE_URL = import.meta.env.VITE_API_URI;
 export default function CourseCategoryPage() {
   // 1. DYNAMIC ROUTING: Grab the category from the URL
   const { categorySlug } = useParams();
@@ -32,7 +32,7 @@ export default function CourseCategoryPage() {
   useEffect(() => {
     window.scrollTo(0, 0); // Scroll to top on category change
     
-    fetch("http://localhost:5000/api/courses")
+    fetch(`${API_BASE_URL}/api/courses`)
       .then((res) => res.json())
       .then((data) => {
         const filteredCourses = data.filter((c) => c.category === categorySlug);
