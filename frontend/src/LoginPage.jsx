@@ -22,7 +22,7 @@ export default function LoginPage() {
     const token = localStorage.getItem("adminToken");
 
     if (token && window.location.pathname === "/login") {
-      navigate("/admin/students", { replace: true });
+      navigate("/", { replace: true });
     }
   }, [navigate]);
 
