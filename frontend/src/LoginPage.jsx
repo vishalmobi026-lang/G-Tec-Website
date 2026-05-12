@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect} from "react";
 import { motion } from "framer-motion";
 import { Lock, User, Eye, EyeOff, LogIn, AlertCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -9,6 +9,13 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+  const token = localStorage.getItem("adminToken");
+  if (token) {
+    navigate("/admin/students");
+  }
+}, [navigate]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
