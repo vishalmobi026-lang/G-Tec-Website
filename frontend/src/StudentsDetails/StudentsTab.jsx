@@ -29,85 +29,65 @@ export default function StudentsTab() {
   const [editingStudent, setEditingStudent] = useState(null);
 
   const fetchData = async () => {
-    try {
-      // 1. Get the token from storage
-      const token = localStorage.getItem("adminToken");
+  try {
+    // 1. Retrieve the token saved during login
+    const token = localStorage.getItem("adminToken");
 
-      const [studentsRes, coursesRes] = await Promise.all([
-        fetch(`${API_BASE_URL}/api/students`, {
-          headers: {
-            "Authorization": `Bearer ${token}`, // ✅ ADD THIS LINE
-            "Content-Type": "application/json"
-          }
-        }),
-        fetch(`${API_BASE_URL}/api/courses`, {
-          headers: {
-            "Authorization": `Bearer ${token}`, // ✅ ADD THIS LINE
-            "Content-Type": "application/json"
-          }
-        }),
-      ]);
+    const [studentsRes, coursesRes] = await Promise.all([
+      fetch(`${API_BASE_URL}/api/students`, {
+        headers: {
+          "Authorization": `Bearer ${token}`, // ✅ CRITICAL: Fixes 401
+          "Content-Type": "application/json"
+        }
+      }),
+      fetch(`${API_BASE_URL}/api/courses`, {
+        headers: {
+          "Authorization": `Bearer ${token}`, // ✅ CRITICAL: Fixes 401
+          "Content-Type": "application/json"
+        }
+      }),
+    ]);
 
-      // 2. Handle unauthorized error gracefully
-      if (studentsRes.status === 401) {
-        console.error("Session expired or Unauthorized");
-        localStorage.removeItem("adminToken");
-        window.location.href = "/login";
-        return;
-      }
-
-      const studentsData = await studentsRes.json();
-      const coursesData = await coursesRes.json();
-
-      // 3. SAFETY CHECK: Ensure data is an array before setting state
-      // This prevents the "e.filter is not a function" crash
-      setStudents(Array.isArray(studentsData) ? studentsData : []);
-      setAllCourses(Array.isArray(coursesData) ? coursesData : []);
-      
-    } catch (err) {
-      console.error("Fetch Error:", err);
-      setStudents([]); // Fallback to empty array on network error
-    } finally {
-      setLoading(false);
+    // 2. Handle token expiration or invalid session
+    if (studentsRes.status === 401) {
+      localStorage.removeItem("adminToken");
+      window.location.href = "/login";
+      return;
     }
-  };
+
+    const studentsData = await studentsRes.json();
+    const coursesData = await coursesRes.json();
+
+    // 3. Safety Check: Ensure the data is an array before setting state
+    // This prevents the "e.filter is not a function" crash
+    setStudents(Array.isArray(studentsData) ? studentsData : []);
+    setAllCourses(Array.isArray(coursesData) ? coursesData : []);
+
+  } catch (err) {
+    console.error("Fetch Error:", err);
+    setStudents([]); // Fallback to empty array on network failure
+  } finally {
+    setLoading(false);
+  }
+};
 
   useEffect(() => {
     fetchData();
   }, []);
 
   const handleDelete = async (id) => {
-    if (
-      !window.confirm(
-        "Are you sure you want to permanently delete this student record?",
-      )
-    )
-      return;
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/students/${id}`, {
-        method: "DELETE",
-      });
-      if (response.ok) fetchData();
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const handleSendSMS = async (id, name, phone) => {
-    if (
-      !window.confirm(`Send enrollment confirmation SMS to ${name} (${phone})?`)
-    )
-      return;
-    try {
-      const response = await fetch(
-        `${API_BASE_URL}/api/students/${id}/send-sms`,
-        { method: "POST" },
-      );
-      if (response.ok) alert("SMS sent successfully!");
-    } catch (err) {
-      console.error(err);
-    }
-  };
+  if (!window.confirm("Are you sure?")) return;
+  try {
+    const token = localStorage.getItem("adminToken"); // Get token
+    const response = await fetch(`${API_BASE_URL}/api/students/${id}`, {
+      method: "DELETE",
+      headers: {
+        "Authorization": `Bearer ${token}` // ✅ Add this
+      }
+    });
+    if (response.ok) fetchData();
+  } catch (err) { console.error(err); }
+};
 
   // ✅ SELECTION LOGIC
   const handleSelectOne = (id) => {
@@ -128,9 +108,13 @@ export default function StudentsTab() {
     if (!window.confirm(`Are you sure you want to send emails to ${selectedIds.length} students?`)) return;
 
     try {
+      const token = localStorage.getItem("adminToken"); // Get token
       const response = await fetch(`${API_BASE_URL}/api/students/bulk-email`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Authorization": `Bearer ${token}`, // ✅ Add this
+          "Content-Type": "application/json"
+        },
         body: JSON.stringify({ studentIds: selectedIds }),
       });
       const data = await response.json();
@@ -154,9 +138,16 @@ export default function StudentsTab() {
     if (!window.confirm(`Send an update email to ${name} at ${email}?`)) return;
 
     try {
+      const token = localStorage.getItem("adminToken"); // Get token
       const response = await fetch(
         `${API_BASE_URL}/api/students/${id}/send-email`,
-        { method: "POST" },
+        {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${token}`, // ✅ Add this
+            "Content-Type": "application/json"
+          }
+        },
       );
       if (response.ok) alert("Email sent successfully!");
       else alert("Failed to send email.");
@@ -168,12 +159,16 @@ export default function StudentsTab() {
   const handleUpdate = async (e) => {
     e.preventDefault();
     try {
+      const token = localStorage.getItem("adminToken");
       // ✅ 1. Separate the _id from the rest of the student data
       const { _id, ...dataToUpdate } = editingStudent;
 
       const response = await fetch(`${API_BASE_URL}/api/students/${_id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          "Authorization": `Bearer ${token}`, // ✅ Add this
+          "Content-Type": "application/json"
+        },
         // ✅ 2. Send ONLY the dataToUpdate (without the _id)
         body: JSON.stringify(dataToUpdate) 
       });
@@ -192,11 +187,10 @@ export default function StudentsTab() {
     }
   };
 
-  const filteredStudents = students.filter(
-    (s) =>
-      (s.name && s.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (s.phone && s.phone.includes(searchTerm)),
-  );
+  const filteredStudents = (students || []).filter((student) =>
+  student?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  student?.regNo?.toLowerCase().includes(searchTerm.toLowerCase())
+);
 
   // Helper function to extract unique categories from the courses list
   const categories = [...new Set(allCourses.map((c) => c.category))];
