@@ -29,47 +29,48 @@ export default function StudentsTab() {
   const [editingStudent, setEditingStudent] = useState(null);
 
   const fetchData = async () => {
-  try {
-    // Get the token from local storage
-    const token = localStorage.getItem("adminToken");
+    try {
+      // 1. Get the token from storage
+      const token = localStorage.getItem("adminToken");
 
-    const [studentsRes, coursesRes] = await Promise.all([
-      fetch(`${API_BASE_URL}/api/students`, {
-        headers: {
-          'Authorization': `Bearer ${token}`, // ✅ Add this
-          'Content-Type': 'application/json'
-        }
-      }),
-      fetch(`${API_BASE_URL}/api/courses`, {
-        headers: {
-          'Authorization': `Bearer ${token}`, // ✅ Add this
-          'Content-Type': 'application/json'
-        }
-      }),
-    ]);
+      const [studentsRes, coursesRes] = await Promise.all([
+        fetch(`${API_BASE_URL}/api/students`, {
+          headers: {
+            "Authorization": `Bearer ${token}`, // ✅ ADD THIS LINE
+            "Content-Type": "application/json"
+          }
+        }),
+        fetch(`${API_BASE_URL}/api/courses`, {
+          headers: {
+            "Authorization": `Bearer ${token}`, // ✅ ADD THIS LINE
+            "Content-Type": "application/json"
+          }
+        }),
+      ]);
 
-    // Check if the response is unauthorized
-    if (studentsRes.status === 401) {
-       console.error("Unauthorized! Redirecting to login...");
-       localStorage.removeItem("adminToken");
-       window.location.href = "/login";
-       return;
+      // 2. Handle unauthorized error gracefully
+      if (studentsRes.status === 401) {
+        console.error("Session expired or Unauthorized");
+        localStorage.removeItem("adminToken");
+        window.location.href = "/login";
+        return;
+      }
+
+      const studentsData = await studentsRes.json();
+      const coursesData = await coursesRes.json();
+
+      // 3. SAFETY CHECK: Ensure data is an array before setting state
+      // This prevents the "e.filter is not a function" crash
+      setStudents(Array.isArray(studentsData) ? studentsData : []);
+      setAllCourses(Array.isArray(coursesData) ? coursesData : []);
+      
+    } catch (err) {
+      console.error("Fetch Error:", err);
+      setStudents([]); // Fallback to empty array on network error
+    } finally {
+      setLoading(false);
     }
-
-    const studentsData = await studentsRes.json();
-    const coursesData = await coursesRes.json();
-
-    // ✅ SAFETY CHECK: Always ensure we have an array to prevent .filter() errors
-    setStudents(Array.isArray(studentsData) ? studentsData : []);
-    setAllCourses(Array.isArray(coursesData) ? coursesData : []);
-
-  } catch (err) {
-    console.error("Fetch Error:", err);
-    setStudents([]); // Fallback to empty array
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   useEffect(() => {
     fetchData();
