@@ -3,9 +3,12 @@ import {
   Routes,
   Route,
   useLocation,
+  Navigate,
+  useNavigate,
 } from "react-router-dom";
 
 import { useEffect, useState } from "react";
+
 import { AnimatePresence } from "framer-motion";
 
 import "./App.css";
@@ -35,18 +38,35 @@ import AdminInquiries from "./ContactUs/ContactUsViewer";
 import NeonStrikeGame from "./GameSection/NeonStrikeGame";
 import AdminCouponDecoder from "./GameSection/AdminCouponDecoder";
 
+function ProtectedRoute({
+  isAdminLoggedIn,
+  children,
+}) {
+  if (!isAdminLoggedIn) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return children;
+}
+
 function AppContent() {
   const location = useLocation();
 
-  const [isPageLoading, setIsPageLoading] = useState(false);
+  const navigate = useNavigate();
 
-  // ✅ Detect admin routes
+  const [isPageLoading, setIsPageLoading] =
+    useState(false);
+
+  const [isAdminLoggedIn, setIsAdminLoggedIn] =
+    useState(
+      !!localStorage.getItem("adminToken")
+    );
+
   const isAdminRoute =
     location.pathname.startsWith("/admin");
 
-  // ✅ Prevent preloader issues on admin pages
+  // ✅ Handle page loader
   useEffect(() => {
-    // Skip loader for admin pages
     if (isAdminRoute) {
       setIsPageLoading(false);
       return;
@@ -63,23 +83,46 @@ function AppContent() {
     return () => clearTimeout(timer);
   }, [location.pathname, isAdminRoute]);
 
+  // ✅ Auto redirect logged-in admin away from login
+  useEffect(() => {
+    if (
+      isAdminLoggedIn &&
+      location.pathname === "/login"
+    ) {
+      navigate("/admin/students", {
+        replace: true,
+      });
+    }
+  }, [
+    isAdminLoggedIn,
+    location.pathname,
+    navigate,
+  ]);
+
+  const handleAdminLogin = () => {
+    setIsAdminLoggedIn(true);
+
+    navigate("/admin/students", {
+      replace: true,
+    });
+  };
+
   return (
     <>
-      {/* ✅ Page Loader */}
+      {/* Loader */}
       <AnimatePresence>
         {isPageLoading && <Preloader />}
       </AnimatePresence>
 
-      {/* ✅ Hide header in admin pages */}
+      {/* Public Header */}
       {!isAdminRoute && <HeaderSection />}
 
-      {/* ✅ Main Routes */}
       <AnimatePresence mode="wait">
         <Routes
           location={location}
           key={location.pathname}
         >
-          {/* Public Routes */}
+          {/* Public */}
           <Route
             path="/"
             element={<HomeSection />}
@@ -111,54 +154,118 @@ function AppContent() {
           />
 
           <Route
-            path="/login"
-            element={<LoginPage />}
-          />
-
-          <Route
             path="/game"
             element={<NeonStrikeGame />}
           />
 
-          {/* Admin Routes */}
+          {/* Login */}
+          <Route
+            path="/login"
+            element={
+              <LoginPage
+                onLoginSuccess={
+                  handleAdminLogin
+                }
+              />
+            }
+          />
+
+          {/* Protected Admin Routes */}
+
           <Route
             path="/admin/students"
-            element={<StudentsTab />}
+            element={
+              <ProtectedRoute
+                isAdminLoggedIn={
+                  isAdminLoggedIn
+                }
+              >
+                <StudentsTab />
+              </ProtectedRoute>
+            }
           />
 
           <Route
             path="/admin/enrollment-log"
-            element={<StudentsEnrollment />}
+            element={
+              <ProtectedRoute
+                isAdminLoggedIn={
+                  isAdminLoggedIn
+                }
+              >
+                <StudentsEnrollment />
+              </ProtectedRoute>
+            }
           />
 
           <Route
             path="/admin/courses"
-            element={<WebUpdater />}
+            element={
+              <ProtectedRoute
+                isAdminLoggedIn={
+                  isAdminLoggedIn
+                }
+              >
+                <WebUpdater />
+              </ProtectedRoute>
+            }
           />
 
           <Route
             path="/admin/enquiry"
-            element={<EnquiryTab />}
+            element={
+              <ProtectedRoute
+                isAdminLoggedIn={
+                  isAdminLoggedIn
+                }
+              >
+                <EnquiryTab />
+              </ProtectedRoute>
+            }
           />
 
           <Route
             path="/admin/contestants"
-            element={<ScoreListener />}
+            element={
+              <ProtectedRoute
+                isAdminLoggedIn={
+                  isAdminLoggedIn
+                }
+              >
+                <ScoreListener />
+              </ProtectedRoute>
+            }
           />
 
           <Route
             path="/admin/decoder"
-            element={<AdminCouponDecoder />}
+            element={
+              <ProtectedRoute
+                isAdminLoggedIn={
+                  isAdminLoggedIn
+                }
+              >
+                <AdminCouponDecoder />
+              </ProtectedRoute>
+            }
           />
 
           <Route
             path="/admin/contact-us"
-            element={<AdminInquiries />}
+            element={
+              <ProtectedRoute
+                isAdminLoggedIn={
+                  isAdminLoggedIn
+                }
+              >
+                <AdminInquiries />
+              </ProtectedRoute>
+            }
           />
         </Routes>
       </AnimatePresence>
 
-      {/* ✅ Hide chatbot/widgets/footer in admin pages */}
+      {/* Public Footer */}
       {!isAdminRoute && (
         <>
           <Chatbot />

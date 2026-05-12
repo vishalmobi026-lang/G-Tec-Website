@@ -3,7 +3,7 @@ const cors = require('cors');
 const { Country, State, City } = require('country-state-city');
 const axios = require('axios'); 
 const mongoose = require('mongoose');
-const adminAuthRoutes = require('./adminAuth');
+const { router: adminAuthRoutes, verifyAdminToken } = require('./adminAuth');
 
 require('dotenv').config();
 
@@ -223,7 +223,7 @@ app.get('/api/india/pincode/:pin', async (req, res) => {
 {/*---------- Course Category verification section ----------*/}
 
 // REPLACE your current POST route with this:
-app.post('/api/categories', async (req, res) => {
+app.post('/api/categories',verifyAdminToken, async (req, res) => {
   try {
     const { name, slug, description, explorerDescription, headline, image } = req.body; 
     const newCategory = new Category({ name, slug, description, explorerDescription, headline, image });
@@ -246,7 +246,7 @@ app.get('/api/categories', async (req, res) => {
 
 //3. Update Category
 
-app.put('/api/categories/:id', async (req, res) => {
+app.put('/api/categories/:id',verifyAdminToken, async (req, res) => {
   try {
     const { name, slug, description, explorerDescription, headline, image } = req.body;
     await Category.findByIdAndUpdate(
@@ -261,7 +261,7 @@ app.put('/api/categories/:id', async (req, res) => {
 });
 
 // 4. Delete Category
-app.delete('/api/categories/:id', async (req, res) => {
+app.delete('/api/categories/:id',verifyAdminToken, async (req, res) => {
   try {
     await Category.findByIdAndDelete(req.params.id);
     res.json({ success: true, message: "Category deleted" });
@@ -293,7 +293,7 @@ app.get('/api/inquiries', async (req, res) => {
 });
 
 // ✅ 2. Delete an inquiry
-app.delete('/api/inquiries/:id', async (req, res) => {
+app.delete('/api/inquiries/:id',verifyAdminToken, async (req, res) => {
   try {
     await Inquiry.findByIdAndDelete(req.params.id);
     res.json({ success: true, message: "Inquiry deleted!" });
@@ -313,7 +313,7 @@ app.get('/api/offers', async (req, res) => {
   }
 });
 
-app.post('/api/offers', async (req, res) => {
+app.post('/api/offers',verifyAdminToken, async (req, res) => {
   try {
     const newOffer = new Offer(req.body);
     await newOffer.save();
@@ -323,7 +323,7 @@ app.post('/api/offers', async (req, res) => {
   }
 });
 
-app.put('/api/offers/:id', async (req, res) => {
+app.put('/api/offers/:id',verifyAdminToken, async (req, res) => {
   try {
     await Offer.findByIdAndUpdate(req.params.id, req.body, { new: true });
     res.json({ success: true, message: "Offer updated successfully!" });
@@ -332,7 +332,7 @@ app.put('/api/offers/:id', async (req, res) => {
   }
 });
 
-app.delete('/api/offers/:id', async (req, res) => {
+app.delete('/api/offers/:id',verifyAdminToken, async (req, res) => {
   try {
     await Offer.findByIdAndDelete(req.params.id);
     res.json({ success: true, message: "Offer deleted!" });
@@ -504,7 +504,7 @@ app.get('/api/courses', async (req, res) => {
   }
 });
 
-app.post('/api/courses', async (req, res) => {
+app.post('/api/courses',verifyAdminToken, async (req, res) => {
   try {
     const newCourse = new Course(req.body);
     await newCourse.save();
@@ -514,7 +514,7 @@ app.post('/api/courses', async (req, res) => {
   }
 });
 
-app.put('/api/courses/:id', async (req, res) => {
+app.put('/api/courses/:id',verifyAdminToken, async (req, res) => {
   try {
     await Course.findByIdAndUpdate(req.params.id, req.body, { new: true });
     res.json({ success: true, message: "Course updated successfully!" });
@@ -523,7 +523,7 @@ app.put('/api/courses/:id', async (req, res) => {
   }
 });
 
-app.delete('/api/courses/:id', async (req, res) => {
+app.delete('/api/courses/:id',verifyAdminToken, async (req, res) => {
   try {
     await Course.findByIdAndDelete(req.params.id);
     res.json({ success: true, message: "Course deleted!" });
@@ -535,7 +535,7 @@ app.delete('/api/courses/:id', async (req, res) => {
 
 {/* ------ students Detail section ----- */}
 
-app.get('/api/students', async (req, res) => {
+app.get('/api/students',verifyAdminToken, async (req, res) => {
   try {
     const activeStudents = await Student.find({ isArchived: { $ne: true } }).sort({ createdAt: -1 });
     res.json(activeStudents);
@@ -544,7 +544,7 @@ app.get('/api/students', async (req, res) => {
   }
 });
 
-app.get('/api/students/all', async (req, res) => {
+app.get('/api/students/all',verifyAdminToken, async (req, res) => {
   try {
     const allStudents = await Student.find().sort({ createdAt: -1 });
     res.json(allStudents);
@@ -681,7 +681,7 @@ app.post('/api/enroll', async (req, res) => {
   }
 });
 
-app.post('/api/students/bulk-email', async (req, res) => {
+app.post('/api/students/bulk-email', verifyAdminToken, async (req, res) => {
   const { studentIds } = req.body;
   
   try {
@@ -763,7 +763,7 @@ app.post('/api/students/bulk-email', async (req, res) => {
 });
 
 // ✅ API to MANUALLY SEND SMS (Triggered by Admin Panel Button)
-app.post('/api/students/:id/send-email', async (req, res) => {
+app.post('/api/students/:id/send-email', verifyAdminToken, async (req, res) => {
   try {
     const student = await Student.findById(req.params.id);
     if(!student) return res.status(404).json({ error: "Student not found" });
@@ -831,7 +831,7 @@ app.post('/api/students/:id/send-email', async (req, res) => {
 });
 
 // ✅ API to UPDATE an existing student
-app.put('/api/students/:id', async (req, res) => {
+app.put('/api/students/:id', verifyAdminToken, async (req, res) => {
   try {
     // ⚠️ CRITICAL: We use findByIdAndUpdate, NOT "new Student()"
     await Student.findByIdAndUpdate(req.params.id, req.body, { new: true });

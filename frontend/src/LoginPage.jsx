@@ -1,32 +1,28 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { Lock, User, Eye, EyeOff, LogIn, AlertCircle } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import {
+  Lock,
+  User,
+  Eye,
+  EyeOff,
+  LogIn,
+  AlertCircle,
+} from "lucide-react";
 
 const API_BASE_URL = import.meta.env.VITE_API_URI;
 
-export default function LoginPage() {
+export default function LoginPage({ onLoginSuccess }) {
   const [formData, setFormData] = useState({
     username: "",
     password: "",
   });
 
-  const [showPassword, setShowPassword] = useState(false);
+  const [showPassword, setShowPassword] =
+    useState(false);
+
   const [error, setError] = useState("");
+
   const [loading, setLoading] = useState(false);
-
-  const navigate = useNavigate();
-
-  // ✅ Prevent redirect loop / duplicate navigation
-  useEffect(() => {
-    const token = localStorage.getItem("adminToken");
-
-    if (token && window.location.pathname === "/login") {
-      navigate("/admin/students", {
-  replace: true,
-});
-    }
-  }, [navigate]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -48,7 +44,6 @@ export default function LoginPage() {
         }
       );
 
-      // ✅ Handle invalid JSON safely
       let data;
 
       try {
@@ -58,18 +53,22 @@ export default function LoginPage() {
       }
 
       if (response.ok && data.success) {
-        // ✅ Save auth data
-        localStorage.setItem("adminToken", data.token);
-        localStorage.setItem("adminUser", data.username);
+        localStorage.setItem(
+          "adminToken",
+          data.token
+        );
 
-        // ✅ Small delay prevents router race condition
-        setTimeout(() => {
-          navigate("/admin/students", {
-  replace: true,
-});
-        }, 100);
+        localStorage.setItem(
+          "adminUser",
+          data.username
+        );
+
+        // ✅ Notify App.jsx
+        onLoginSuccess();
       } else {
-        setError(data.message || "Invalid credentials");
+        setError(
+          data.message || "Invalid credentials"
+        );
       }
     } catch (err) {
       console.error("Login Error:", err);
@@ -92,7 +91,10 @@ export default function LoginPage() {
       >
         <div className="text-center mb-8">
           <div className="w-16 h-16 bg-blue-600/20 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-blue-500/30">
-            <Lock className="text-blue-500" size={30} />
+            <Lock
+              className="text-blue-500"
+              size={30}
+            />
           </div>
 
           <h2 className="text-2xl font-bold text-white">
@@ -104,7 +106,10 @@ export default function LoginPage() {
           </p>
         </div>
 
-        <form onSubmit={handleLogin} className="space-y-5">
+        <form
+          onSubmit={handleLogin}
+          className="space-y-5"
+        >
           {error && (
             <div className="bg-red-500/10 border border-red-500/20 p-4 rounded-xl flex items-center gap-3 text-red-500 text-sm">
               <AlertCircle size={18} />
@@ -153,7 +158,11 @@ export default function LoginPage() {
               />
 
               <input
-                type={showPassword ? "text" : "password"}
+                type={
+                  showPassword
+                    ? "text"
+                    : "password"
+                }
                 required
                 value={formData.password}
                 className="w-full bg-zinc-800/50 border border-zinc-700 text-white pl-12 pr-12 py-4 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 transition-all"
@@ -168,7 +177,9 @@ export default function LoginPage() {
 
               <button
                 type="button"
-                onClick={() => setShowPassword(!showPassword)}
+                onClick={() =>
+                  setShowPassword(!showPassword)
+                }
                 className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-600 hover:text-white"
               >
                 {showPassword ? (
@@ -180,7 +191,6 @@ export default function LoginPage() {
             </div>
           </div>
 
-          {/* Login Button */}
           <button
             type="submit"
             disabled={loading}
