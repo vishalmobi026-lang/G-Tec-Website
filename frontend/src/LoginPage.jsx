@@ -30,7 +30,7 @@ export default function LoginPage() {
         localStorage.setItem("adminUser", data.username);
         
         // Refresh the page or navigate to trigger Header update
-        window.location.href = "/admin/students"; 
+        navigate("/admin/students"); 
       } else {
         setError(data.message || "Invalid credentials");
       }
