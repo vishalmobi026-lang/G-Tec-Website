@@ -10,7 +10,7 @@ import {
   ChevronDown, AlertCircle, Rocket
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-
+const API_BASE_URL = import.meta.env.VITE_API_URI;
 const Lottie = LottieBase.default || LottieBase;
 
 const API_CATEGORY_MAP = {
@@ -116,7 +116,7 @@ export default function NeonStrikeGame() {
   const gameLoopRef = useRef(null);
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/countries")
+    fetch(`${API_BASE_URL}/api/countries`)
       .then((res) => res.json())
       .then((data) => setCountries(data))
       .catch((err) => console.error("Failed to fetch countries:", err));
@@ -332,7 +332,7 @@ export default function NeonStrikeGame() {
 
     const fullPhoneNumber = `${formData.countryCode}${formData.phone}`;
     try {
-      await fetch("http://localhost:5000/api/gamescores/add", {
+      await fetch(`${API_BASE_URL}/api/gamescores/add`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: formData.name, phone: fullPhoneNumber, course: formData.course, score: finalScore, couponCode: code })

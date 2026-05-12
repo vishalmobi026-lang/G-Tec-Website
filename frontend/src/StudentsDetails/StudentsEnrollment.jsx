@@ -12,7 +12,7 @@ import {
   Download
 } from "lucide-react";
 import * as XLSX from "xlsx"; // Import the Excel library
-
+const API_BASE_URL = import.meta.env.VITE_API_URI;
 export default function StudentsEnrollment() {
   const [students, setStudents] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -20,7 +20,7 @@ export default function StudentsEnrollment() {
 
   // Fetch all students
   const fetchStudents = () => {
-    fetch("http://localhost:5000/api/students/all")
+    fetch(`${API_BASE_URL}/api/students/all`)
       .then((res) => res.json())
       .then((data) => {
         setStudents(data);
@@ -42,7 +42,7 @@ export default function StudentsEnrollment() {
     if (!confirmRestore) return;
 
     try {
-      const res = await fetch(`http://localhost:5000/api/students/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/students/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ isArchived: false }),

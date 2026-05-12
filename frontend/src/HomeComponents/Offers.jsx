@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Check } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-
+const API_BASE_URL = import.meta.env.VITE_API_URI;
 export default function PricingSection() {
   const navigate = useNavigate();
   const [isMonthly, setIsMonthly] = useState(true);
@@ -13,7 +13,7 @@ export default function PricingSection() {
   useEffect(() => {
     const fetchOffers = async () => {
       try {
-        const response = await fetch("http://localhost:5000/api/offers");
+        const response = await fetch(`${API_BASE_URL}/api/offers`);
         const data = await response.json();
 
         if (data && data.length > 0) {

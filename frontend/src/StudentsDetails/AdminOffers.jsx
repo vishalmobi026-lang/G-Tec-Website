@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Plus, Trash2, Tag, FileText, Check, X, IndianRupee, Save, Star, Link as LinkIcon, Edit, Loader2, List, AlignLeft } from "lucide-react";
-
+const API_BASE_URL = import.meta.env.VITE_API_URI;
 export default function AdminOffers() {
   const [offers, setOffers] = useState([]);
   const [allCourses, setAllCourses] = useState([]);
@@ -15,8 +15,8 @@ export default function AdminOffers() {
   const fetchData = async () => {
     try {
       const [offersRes, coursesRes] = await Promise.all([
-        fetch("http://localhost:5000/api/offers"),
-        fetch("http://localhost:5000/api/courses")
+        fetch(`${API_BASE_URL}/api/offers`),
+        fetch(`${API_BASE_URL}/api/courses`)
       ]);
       const offersData = await offersRes.json();
       const coursesData = await coursesRes.json();
@@ -64,7 +64,7 @@ export default function AdminOffers() {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      const url = editingId ? `http://localhost:5000/api/offers/${editingId}` : "http://localhost:5000/api/offers";
+      const url = editingId ? `${API_BASE_URL}/api/offers/${editingId}` : `${API_BASE_URL}/api/offers`;
       const method = editingId ? "PUT" : "POST";
       
       const res = await fetch(url, {
@@ -87,7 +87,7 @@ export default function AdminOffers() {
   const handleDelete = async (id) => {
     if (!window.confirm("Delete this offer?")) return;
     try {
-      await fetch(`http://localhost:5000/api/offers/${id}`, { method: "DELETE" });
+      await fetch(`${API_BASE_URL}/api/offers/${id}`, { method: "DELETE" });
       setOffers(offers.filter((o) => o._id !== id));
     } catch (error) {
       console.error("Delete error:", error);

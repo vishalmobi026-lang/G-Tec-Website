@@ -16,7 +16,7 @@ import {
   CheckSquare
 } from "lucide-react"; // <-- Added Mail
 import { motion, AnimatePresence } from "framer-motion";
-
+const API_BASE_URL = import.meta.env.VITE_API_URI;
 export default function StudentsTab() {
   const [students, setStudents] = useState([]);
   const [allCourses, setAllCourses] = useState([]); // ✅ NEW: Store all courses from DB
@@ -31,8 +31,8 @@ export default function StudentsTab() {
   const fetchData = async () => {
     try {
       const [studentsRes, coursesRes] = await Promise.all([
-        fetch("http://localhost:5000/api/students"),
-        fetch("http://localhost:5000/api/courses"), // ✅ Fetch courses for the Edit Modal
+        fetch(`${API_BASE_URL}/api/students`),
+        fetch(`${API_BASE_URL}/api/courses`), // ✅ Fetch courses for the Edit Modal
       ]);
       const studentsData = await studentsRes.json();
       const coursesData = await coursesRes.json();
@@ -58,7 +58,7 @@ export default function StudentsTab() {
     )
       return;
     try {
-      const response = await fetch(`http://localhost:5000/api/students/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/students/${id}`, {
         method: "DELETE",
       });
       if (response.ok) fetchData();
@@ -74,7 +74,7 @@ export default function StudentsTab() {
       return;
     try {
       const response = await fetch(
-        `http://localhost:5000/api/students/${id}/send-sms`,
+        `${API_BASE_URL}/api/students/${id}/send-sms`,
         { method: "POST" },
       );
       if (response.ok) alert("SMS sent successfully!");
@@ -102,7 +102,7 @@ export default function StudentsTab() {
     if (!window.confirm(`Are you sure you want to send emails to ${selectedIds.length} students?`)) return;
 
     try {
-      const response = await fetch("http://localhost:5000/api/students/bulk-email", {
+      const response = await fetch(`${API_BASE_URL}/api/students/bulk-email`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ studentIds: selectedIds }),
@@ -129,7 +129,7 @@ export default function StudentsTab() {
 
     try {
       const response = await fetch(
-        `http://localhost:5000/api/students/${id}/send-email`,
+        `${API_BASE_URL}/api/students/${id}/send-email`,
         { method: "POST" },
       );
       if (response.ok) alert("Email sent successfully!");
@@ -145,7 +145,7 @@ export default function StudentsTab() {
       // ✅ 1. Separate the _id from the rest of the student data
       const { _id, ...dataToUpdate } = editingStudent;
 
-      const response = await fetch(`http://localhost:5000/api/students/${_id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/students/${_id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         // ✅ 2. Send ONLY the dataToUpdate (without the _id)

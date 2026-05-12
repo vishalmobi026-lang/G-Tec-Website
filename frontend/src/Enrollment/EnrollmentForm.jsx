@@ -6,7 +6,7 @@ import studentAnimation from "../assets/Student.json";
 import { MapPin, Phone, Hash, Globe, ChevronRight, User, Calendar, GraduationCap, BookOpen, Building2, LibraryBig, Mail } from "lucide-react"; // <-- Added Mail
 import successAnimation from "../assets/Success.json"; 
 import errorAnimation from "../assets/error.json";
-
+const API_BASE_URL = import.meta.env.VITE_API_URI;
 const PopupAnimation = ({ type }) => {
   const { View } = useLottie({
     // It dynamically picks the right JSON based on the modal state
@@ -63,7 +63,7 @@ export default function EnrollmentForm() {
     pincode: "",
   });
 
-  const API_BASE = "http://localhost:5000/api";
+  const API_BASE = `${API_BASE_URL}/api`;
 
   // --- API UseEffects ---
   useEffect(() => {

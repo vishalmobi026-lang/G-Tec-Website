@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Percent, Trophy, AlertCircle, Gamepad2, User, Phone, BookOpen, Search, Loader2 } from 'lucide-react';
-
+const API_BASE_URL = import.meta.env.VITE_API_URI;
 export default function AdminCouponDecoder() {
   const [inputCode, setInputCode] = useState("");
   const [result, setResult] = useState(null);
@@ -19,7 +19,7 @@ export default function AdminCouponDecoder() {
 
     try {
       // Fetch all game scores from the backend
-      const response = await fetch('http://localhost:5000/api/gamescores/all');
+      const response = await fetch(`${API_BASE_URL}/api/gamescores/all`);
       const data = await response.json();
 
       // Find the specific user who owns this coupon code

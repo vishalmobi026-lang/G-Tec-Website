@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Trophy, Search, Users, Loader2, Hash, ArrowUpRight } from 'lucide-react';
-
+const API_BASE_URL = import.meta.env.VITE_API_URI;
 export default function ScoreListener() {
   const [contestants, setContestants] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -14,7 +14,7 @@ export default function ScoreListener() {
   const fetchContestants = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch('http://localhost:5000/api/gamescores/all');
+      const response = await fetch(`${API_BASE_URL}/api/gamescores/all`);
       const data = await response.json();
       setContestants(data);
     } catch (error) {

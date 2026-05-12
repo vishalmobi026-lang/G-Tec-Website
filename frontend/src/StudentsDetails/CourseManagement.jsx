@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Plus, Trash2, Save, BookOpen, Layers, ImageIcon, FileText, Clock, Tag, AlignLeft, Edit, X, Award, Search } from "lucide-react";
-
+const API_BASE_URL = import.meta.env.VITE_API_URI;
 export default function CourseManagement() {
   const [courses, setCourses] = useState([]);
   const [activeFilter, setActiveFilter] = useState("all"); 
@@ -15,7 +15,7 @@ export default function CourseManagement() {
   const [certifications, setCertifications] = useState([""]);
   const [dynamicCategories, setDynamicCategories] = useState([]);
 
-  const API_BASE = "http://localhost:5000/api";
+  const API_BASE = `${API_BASE_URL}/api`;
 
   const fetchCourses = () => {
     fetch(`${API_BASE}/courses`)
