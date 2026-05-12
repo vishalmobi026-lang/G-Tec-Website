@@ -36,14 +36,18 @@ function AppContent() {
   const [isPageLoading, setIsPageLoading] = useState(false);
 
   useEffect(() => {
-    setIsPageLoading(true);
-    window.scrollTo(0, 0);
-    const timer = setTimeout(() => {
-      setIsPageLoading(false);
-    }, 1000);
+  if (location.pathname.startsWith("/admin")) return;
 
-    return () => clearTimeout(timer);
-  }, [location.pathname]);
+  setIsPageLoading(true);
+
+  window.scrollTo(0, 0);
+
+  const timer = setTimeout(() => {
+    setIsPageLoading(false);
+  }, 1000);
+
+  return () => clearTimeout(timer);
+}, [location.pathname]);
 
   return (
     <>
