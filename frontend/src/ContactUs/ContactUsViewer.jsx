@@ -4,7 +4,7 @@ import {
   Mail, Phone, Calendar, ArrowUpRight, 
   MessageSquare, Inbox, ShieldCheck, RefreshCw
 } from 'lucide-react';
-
+const API_BASE_URL = import.meta.env.VITE_API_URI;
 export default function AdminInquiries() {
   const [inquiries, setInquiries] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -13,7 +13,7 @@ export default function AdminInquiries() {
   const fetchInquiries = async () => {
     setIsRefreshing(true);
     try {
-      const res = await fetch("http://localhost:5000/api/contact-inquiries");
+      const res = await fetch(`${API_BASE_URL}/api/contact-inquiries`);
       const result = await res.json();
       if (result.success) setInquiries(result.data);
     } catch (err) {

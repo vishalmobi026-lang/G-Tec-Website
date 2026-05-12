@@ -4,8 +4,9 @@ import { useLottie } from "lottie-react";
 import { Phone, Mail, MapPin } from "lucide-react";
 // IMPORTANT: Update this path to where your actual Lottie JSON is stored
 import contactAnimation from "../assets/Contact Us.json"; 
-
+const API_BASE_URL = import.meta.env.VITE_API_URI;
 export default function ContactUsForm() {
+
  const [formData, setFormData] = useState({
   firstName: "",
   lastName: "",
@@ -30,7 +31,7 @@ const [countries, setCountries] = useState([]);
   useEffect(() => {
     const fetchCountries = async () => {
       try {
-        const response = await fetch("http://localhost:5000/api/countries"); 
+        const response = await fetch(`${API_BASE_URL}/api/countries`); 
         const data = await response.json();
         
         if (data && data.length > 0) {
@@ -76,7 +77,7 @@ const [countries, setCountries] = useState([]);
   setStatusMessage("");
 
   try {
-    const response = await fetch("http://localhost:5000/api/contact", {
+    const response = await fetch(`${API_BASE_URL}/api/contact`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

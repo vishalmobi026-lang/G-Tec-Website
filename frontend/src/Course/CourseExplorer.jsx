@@ -2,13 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowRight, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-
+const API_BASE_URL = import.meta.env.VITE_API_URI;
 export default function CourseExplorer() {
   const [categories, setCategories] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/categories")
+    fetch(`${API_BASE_URL}/api/categories`)
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) {
