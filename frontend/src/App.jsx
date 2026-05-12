@@ -4,9 +4,12 @@ import {
   Route,
   useLocation,
 } from "react-router-dom";
+
 import { useEffect, useState } from "react";
-import { AnimatePresence } from "framer-motion"; // Added missing import
+import { AnimatePresence } from "framer-motion";
+
 import "./App.css";
+
 import Preloader from "./PreLoader";
 
 import HeaderSection from "./Main/Header";
@@ -14,13 +17,14 @@ import HomeSection from "./HomeComponents/HomeSection";
 import FooterSection from "./Main/Footer";
 import EnrollmentForm from "./Enrollment/EnrollmentForm";
 import AboutSection from "./AboutUsComponents/Aboutus";
-import Course from "./Course/Course"
+import Course from "./Course/Course";
 import ContactUs from "./ContactUs/ContactUs";
 import Chatbot from "./Chatbot/Chatbot";
 import GameLauncherWidget from "./GameSection/GameLauncherWidget";
 import CourseCategoryPage from "./CoursesSection/CourseCategoryPage";
 
 import LoginPage from "./LoginPage";
+
 import StudentsTab from "./StudentsDetails/StudentsTab";
 import StudentsEnrollment from "./StudentsDetails/StudentsEnrollment";
 import WebUpdater from "./StudentsDetails/WebUpdater";
@@ -28,58 +32,140 @@ import ScoreListener from "./Score/ScoreListener";
 import EnquiryTab from "./Enrollment/EnquiryTab";
 import AdminInquiries from "./ContactUs/ContactUsViewer";
 
-import NeonStrikeGame from "./GameSection/NeonStrikeGame"; 
+import NeonStrikeGame from "./GameSection/NeonStrikeGame";
 import AdminCouponDecoder from "./GameSection/AdminCouponDecoder";
 
 function AppContent() {
   const location = useLocation();
+
   const [isPageLoading, setIsPageLoading] = useState(false);
 
+  // ✅ Detect admin routes
+  const isAdminRoute =
+    location.pathname.startsWith("/admin");
+
+  // ✅ Prevent preloader issues on admin pages
   useEffect(() => {
-  if (location.pathname.startsWith("/admin")) return;
+    // Skip loader for admin pages
+    if (isAdminRoute) {
+      setIsPageLoading(false);
+      return;
+    }
 
-  setIsPageLoading(true);
+    setIsPageLoading(true);
 
-  window.scrollTo(0, 0);
+    window.scrollTo(0, 0);
 
-  const timer = setTimeout(() => {
-    setIsPageLoading(false);
-  }, 1000);
+    const timer = setTimeout(() => {
+      setIsPageLoading(false);
+    }, 700);
 
-  return () => clearTimeout(timer);
-}, [location.pathname]);
+    return () => clearTimeout(timer);
+  }, [location.pathname, isAdminRoute]);
 
   return (
     <>
+      {/* ✅ Page Loader */}
       <AnimatePresence>
         {isPageLoading && <Preloader />}
       </AnimatePresence>
 
-      <HeaderSection />
+      {/* ✅ Hide header in admin pages */}
+      {!isAdminRoute && <HeaderSection />}
 
+      {/* ✅ Main Routes */}
       <AnimatePresence mode="wait">
-        <Routes location={location} key={location.pathname}>
-          <Route path="/game" element={<NeonStrikeGame />} />
-          <Route path="/" element={<HomeSection />} />
-          <Route path="/about" element={<AboutSection />} />
-          <Route path="/contact" element={<ContactUs />} />
-          <Route path="/courses" element={<Course />} />
-          <Route path="/courses/:categorySlug" element={<CourseCategoryPage />} />
-          <Route path="/enroll" element={<EnrollmentForm />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/admin/students" element={<StudentsTab />} />
-          <Route path="/admin/enrollment-log" element={<StudentsEnrollment />} />
-          <Route path="/admin/courses" element={<WebUpdater />} />
-          <Route path="/admin/enquiry" element={<EnquiryTab />} />
-          <Route path="/admin/contestants" element={<ScoreListener />} />
-          <Route path="/admin/decoder" element={<AdminCouponDecoder />} />
-          <Route path="/admin/contact-us" element={<AdminInquiries />} />
+        <Routes
+          location={location}
+          key={location.pathname}
+        >
+          {/* Public Routes */}
+          <Route
+            path="/"
+            element={<HomeSection />}
+          />
+
+          <Route
+            path="/about"
+            element={<AboutSection />}
+          />
+
+          <Route
+            path="/contact"
+            element={<ContactUs />}
+          />
+
+          <Route
+            path="/courses"
+            element={<Course />}
+          />
+
+          <Route
+            path="/courses/:categorySlug"
+            element={<CourseCategoryPage />}
+          />
+
+          <Route
+            path="/enroll"
+            element={<EnrollmentForm />}
+          />
+
+          <Route
+            path="/login"
+            element={<LoginPage />}
+          />
+
+          <Route
+            path="/game"
+            element={<NeonStrikeGame />}
+          />
+
+          {/* Admin Routes */}
+          <Route
+            path="/admin/students"
+            element={<StudentsTab />}
+          />
+
+          <Route
+            path="/admin/enrollment-log"
+            element={<StudentsEnrollment />}
+          />
+
+          <Route
+            path="/admin/courses"
+            element={<WebUpdater />}
+          />
+
+          <Route
+            path="/admin/enquiry"
+            element={<EnquiryTab />}
+          />
+
+          <Route
+            path="/admin/contestants"
+            element={<ScoreListener />}
+          />
+
+          <Route
+            path="/admin/decoder"
+            element={<AdminCouponDecoder />}
+          />
+
+          <Route
+            path="/admin/contact-us"
+            element={<AdminInquiries />}
+          />
         </Routes>
       </AnimatePresence>
-      
-      <Chatbot />
-      <GameLauncherWidget />
-      <FooterSection />
+
+      {/* ✅ Hide chatbot/widgets/footer in admin pages */}
+      {!isAdminRoute && (
+        <>
+          <Chatbot />
+          <GameLauncherWidget />
+          <FooterSection />
+        </>
+      )}
     </>
   );
 }
