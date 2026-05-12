@@ -22,7 +22,9 @@ export default function LoginPage() {
     const token = localStorage.getItem("adminToken");
 
     if (token && window.location.pathname === "/login") {
-      navigate("/", { replace: true });
+      navigate("/admin/students", {
+  replace: true,
+});
     }
   }, [navigate]);
 
@@ -62,9 +64,9 @@ export default function LoginPage() {
 
         // ✅ Small delay prevents router race condition
         setTimeout(() => {
-          navigate("/", {
-            replace: true,
-          });
+          navigate("/admin/students", {
+  replace: true,
+});
         }, 100);
       } else {
         setError(data.message || "Invalid credentials");
