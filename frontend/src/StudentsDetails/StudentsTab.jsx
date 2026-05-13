@@ -30,26 +30,30 @@ export default function StudentsTab() {
 
   const fetchData = async () => {
   try {
-    // 1. Retrieve the token saved during login
     const token = localStorage.getItem("adminToken");
+    
+    if (!token) {
+      window.location.href = "/login";
+      return;
+    }
 
     const [studentsRes, coursesRes] = await Promise.all([
       fetch(`${API_BASE_URL}/api/students`, {
         headers: {
-          "Authorization": `Bearer ${token}`, // ✅ CRITICAL: Fixes 401
+          "Authorization": `Bearer ${token}`, 
           "Content-Type": "application/json"
         }
       }),
       fetch(`${API_BASE_URL}/api/courses`, {
         headers: {
-          "Authorization": `Bearer ${token}`, // ✅ CRITICAL: Fixes 401
+          "Authorization": `Bearer ${token}`,
           "Content-Type": "application/json"
         }
       }),
     ]);
 
-    // 2. Handle token expiration or invalid session
-    if (studentsRes.status === 401) {
+    if (studentsRes.status === 401 || coursesRes.status === 401) {
+      console.error("Token invalid or expired. Logging out.");
       localStorage.removeItem("adminToken");
       window.location.href = "/login";
       return;
@@ -58,14 +62,12 @@ export default function StudentsTab() {
     const studentsData = await studentsRes.json();
     const coursesData = await coursesRes.json();
 
-    // 3. Safety Check: Ensure the data is an array before setting state
-    // This prevents the "e.filter is not a function" crash
     setStudents(Array.isArray(studentsData) ? studentsData : []);
     setAllCourses(Array.isArray(coursesData) ? coursesData : []);
 
   } catch (err) {
     console.error("Fetch Error:", err);
-    setStudents([]); // Fallback to empty array on network failure
+    setStudents([]);
   } finally {
     setLoading(false);
   }
@@ -187,7 +189,7 @@ export default function StudentsTab() {
     }
   };
 
-  const filteredStudents = (students || []).filter((student) =>
+  const filteredStudents = (Array.isArray(students) ? students : []).filter((student) =>
   student?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
   student?.regNo?.toLowerCase().includes(searchTerm.toLowerCase())
 );
