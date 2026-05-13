@@ -35,9 +35,15 @@ function AppContent() {
   const location = useLocation();
   const [isPageLoading, setIsPageLoading] = useState(false);
 
-  // ✅ Step 1: Define which pages should NOT show the public Header/Footer
-  // This checks if the path starts with /admin or is exactly /login
-  const isHideLayout = location.pathname.startsWith("/admin") || location.pathname === "/login";
+  useEffect(() => {
+    setIsPageLoading(true);
+    window.scrollTo(0, 0);
+    const timer = setTimeout(() => {
+      setIsPageLoading(false);
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [location.pathname]);
 
   return (
     <>
@@ -45,8 +51,7 @@ function AppContent() {
         {isPageLoading && <Preloader />}
       </AnimatePresence>
 
-      {/* ✅ Step 2: Only show Header if NOT an admin/login route */}
-      {!isHideLayout && <HeaderSection />}
+      <HeaderSection />
 
       <AnimatePresence mode="wait">
         <Routes location={location} key={location.pathname}>
@@ -59,7 +64,6 @@ function AppContent() {
           <Route path="/enroll" element={<EnrollmentForm />} />
           <Route path="/login" element={<LoginPage />} />
           
-          {/* Admin Routes */}
           <Route path="/admin/students" element={<StudentsTab />} />
           <Route path="/admin/enrollment-log" element={<StudentsEnrollment />} />
           <Route path="/admin/courses" element={<WebUpdater />} />
@@ -70,14 +74,9 @@ function AppContent() {
         </Routes>
       </AnimatePresence>
       
-      {/* ✅ Step 3: Only show Widgets and Footer if NOT an admin/login route */}
-      {!isHideLayout && (
-        <>
-          <Chatbot />
-          <GameLauncherWidget />
-          <FooterSection />
-        </>
-      )}
+      <Chatbot />
+      <GameLauncherWidget />
+      <FooterSection />
     </>
   );
 }
