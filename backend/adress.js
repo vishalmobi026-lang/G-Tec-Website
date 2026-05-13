@@ -3,7 +3,7 @@ const cors = require('cors');
 const { Country, State, City } = require('country-state-city');
 const axios = require('axios'); 
 const mongoose = require('mongoose');
-const adminAuthRoutes = require('./adminAuth').router;
+const adminAuthRoutes = require('./adminAuth');
 
 require('dotenv').config();
 
