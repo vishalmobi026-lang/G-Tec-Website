@@ -16,7 +16,7 @@ import {
   CheckSquare
 } from "lucide-react"; // <-- Added Mail
 import { motion, AnimatePresence } from "framer-motion";
-const API_BASE_URL = import.meta.env.VITE_API_URI;
+ const API_BASE_URL = import.meta.env.VITE_API_URI;
 export default function StudentsTab() {
   const [students, setStudents] = useState([]);
   const [allCourses, setAllCourses] = useState([]); // ✅ NEW: Store all courses from DB
@@ -30,45 +30,26 @@ export default function StudentsTab() {
 
   const fetchData = async () => {
     try {
-      const token = localStorage.getItem("adminToken");
-      
-      // ✅ Auto-logout if no token is found
-      if (!token) {
-        window.location.href = "/login";
-        return;
-      }
+      // ✅ 1. Re-added API_BASE_URL so it works on Vercel AND Local
+      const API_BASE_URL = import.meta.env.VITE_API_URI;
 
       const [studentsRes, coursesRes] = await Promise.all([
-        fetch(`${API_BASE_URL}/api/students`, {
-          headers: {
-            "Authorization": `Bearer ${token}`, // <-- CRITICAL
-            "Content-Type": "application/json"
-          }
-        }),
-        fetch(`${API_BASE_URL}/api/courses`, {
-          headers: {
-            "Authorization": `Bearer ${token}`, // <-- CRITICAL
-            "Content-Type": "application/json"
-          }
-        }),
+        fetch(`${API_BASE_URL}/api/students`),
+        fetch(`${API_BASE_URL}/api/courses`), 
       ]);
-
-      // ✅ Auto-logout if the token is expired/invalid (401)
-      if (studentsRes.status === 401) {
-        localStorage.removeItem("adminToken");
-        window.location.href = "/login";
-        return;
-      }
 
       const studentsData = await studentsRes.json();
       const coursesData = await coursesRes.json();
 
+      // ✅ 2. Re-added the safety check so your app NEVER crashes!
       setStudents(Array.isArray(studentsData) ? studentsData : []);
       setAllCourses(Array.isArray(coursesData) ? coursesData : []);
 
     } catch (err) {
       console.error("Fetch Error:", err);
+      // Fallback to empty arrays so the UI stays alive
       setStudents([]); 
+      setAllCourses([]);
     } finally {
       setLoading(false);
     }
@@ -79,18 +60,21 @@ export default function StudentsTab() {
   }, []);
 
   const handleDelete = async (id) => {
-  if (!window.confirm("Are you sure?")) return;
-  try {
-    const token = localStorage.getItem("adminToken"); // Get token
-    const response = await fetch(`${API_BASE_URL}/api/students/${id}`, {
-      method: "DELETE",
-      headers: {
-        "Authorization": `Bearer ${token}` // ✅ Add this
-      }
-    });
-    if (response.ok) fetchData();
-  } catch (err) { console.error(err); }
-};
+    if (
+      !window.confirm(
+        "Are you sure you want to permanently delete this student record?",
+      )
+    )
+      return;
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/students/${id}`, {
+        method: "DELETE",
+      });
+      if (response.ok) fetchData();
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   // ✅ SELECTION LOGIC
   const handleSelectOne = (id) => {
@@ -111,13 +95,9 @@ export default function StudentsTab() {
     if (!window.confirm(`Are you sure you want to send emails to ${selectedIds.length} students?`)) return;
 
     try {
-      const token = localStorage.getItem("adminToken"); // Get token
       const response = await fetch(`${API_BASE_URL}/api/students/bulk-email`, {
         method: "POST",
-        headers: {
-          "Authorization": `Bearer ${token}`, // ✅ Add this
-          "Content-Type": "application/json"
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ studentIds: selectedIds }),
       });
       const data = await response.json();
@@ -141,16 +121,9 @@ export default function StudentsTab() {
     if (!window.confirm(`Send an update email to ${name} at ${email}?`)) return;
 
     try {
-      const token = localStorage.getItem("adminToken"); // Get token
       const response = await fetch(
         `${API_BASE_URL}/api/students/${id}/send-email`,
-        {
-          method: "POST",
-          headers: {
-            "Authorization": `Bearer ${token}`, // ✅ Add this
-            "Content-Type": "application/json"
-          }
-        },
+        { method: "POST" },
       );
       if (response.ok) alert("Email sent successfully!");
       else alert("Failed to send email.");
@@ -162,16 +135,12 @@ export default function StudentsTab() {
   const handleUpdate = async (e) => {
     e.preventDefault();
     try {
-      const token = localStorage.getItem("adminToken");
       // ✅ 1. Separate the _id from the rest of the student data
       const { _id, ...dataToUpdate } = editingStudent;
 
       const response = await fetch(`${API_BASE_URL}/api/students/${_id}`, {
         method: 'PUT',
-        headers: {
-          "Authorization": `Bearer ${token}`, // ✅ Add this
-          "Content-Type": "application/json"
-        },
+        headers: { 'Content-Type': 'application/json' },
         // ✅ 2. Send ONLY the dataToUpdate (without the _id)
         body: JSON.stringify(dataToUpdate) 
       });
@@ -192,6 +161,7 @@ export default function StudentsTab() {
 
   const safeStudents = Array.isArray(students) ? students : [];
 
+  // 2. Filter the safe array
   const filteredStudents = safeStudents.filter((student) =>
     student?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     student?.regNo?.toLowerCase().includes(searchTerm.toLowerCase())
