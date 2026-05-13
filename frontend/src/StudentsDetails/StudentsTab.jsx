@@ -29,49 +29,50 @@ export default function StudentsTab() {
   const [editingStudent, setEditingStudent] = useState(null);
 
   const fetchData = async () => {
-  try {
-    const token = localStorage.getItem("adminToken");
-    
-    if (!token) {
-      window.location.href = "/login";
-      return;
+    try {
+      const token = localStorage.getItem("adminToken");
+      
+      // ✅ Auto-logout if no token is found
+      if (!token) {
+        window.location.href = "/login";
+        return;
+      }
+
+      const [studentsRes, coursesRes] = await Promise.all([
+        fetch(`${API_BASE_URL}/api/students`, {
+          headers: {
+            "Authorization": `Bearer ${token}`, // <-- CRITICAL
+            "Content-Type": "application/json"
+          }
+        }),
+        fetch(`${API_BASE_URL}/api/courses`, {
+          headers: {
+            "Authorization": `Bearer ${token}`, // <-- CRITICAL
+            "Content-Type": "application/json"
+          }
+        }),
+      ]);
+
+      // ✅ Auto-logout if the token is expired/invalid (401)
+      if (studentsRes.status === 401) {
+        localStorage.removeItem("adminToken");
+        window.location.href = "/login";
+        return;
+      }
+
+      const studentsData = await studentsRes.json();
+      const coursesData = await coursesRes.json();
+
+      setStudents(Array.isArray(studentsData) ? studentsData : []);
+      setAllCourses(Array.isArray(coursesData) ? coursesData : []);
+
+    } catch (err) {
+      console.error("Fetch Error:", err);
+      setStudents([]); 
+    } finally {
+      setLoading(false);
     }
-
-    const [studentsRes, coursesRes] = await Promise.all([
-      fetch(`${API_BASE_URL}/api/students`, {
-        headers: {
-          "Authorization": `Bearer ${token}`, 
-          "Content-Type": "application/json"
-        }
-      }),
-      fetch(`${API_BASE_URL}/api/courses`, {
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json"
-        }
-      }),
-    ]);
-
-    if (studentsRes.status === 401 || coursesRes.status === 401) {
-      console.error("Token invalid or expired. Logging out.");
-      localStorage.removeItem("adminToken");
-      window.location.href = "/login";
-      return;
-    }
-
-    const studentsData = await studentsRes.json();
-    const coursesData = await coursesRes.json();
-
-    setStudents(Array.isArray(studentsData) ? studentsData : []);
-    setAllCourses(Array.isArray(coursesData) ? coursesData : []);
-
-  } catch (err) {
-    console.error("Fetch Error:", err);
-    setStudents([]);
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   useEffect(() => {
     fetchData();
@@ -189,10 +190,12 @@ export default function StudentsTab() {
     }
   };
 
-  const filteredStudents = (Array.isArray(students) ? students : []).filter((student) =>
-  student?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-  student?.regNo?.toLowerCase().includes(searchTerm.toLowerCase())
-);
+  const safeStudents = Array.isArray(students) ? students : [];
+
+  const filteredStudents = safeStudents.filter((student) =>
+    student?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    student?.regNo?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   // Helper function to extract unique categories from the courses list
   const categories = [...new Set(allCourses.map((c) => c.category))];
