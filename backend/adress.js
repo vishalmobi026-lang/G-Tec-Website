@@ -3,7 +3,7 @@ const cors = require('cors');
 const { Country, State, City } = require('country-state-city');
 const axios = require('axios'); 
 const mongoose = require('mongoose');
-const { router: adminAuthRoutes, verifyAdminToken } = require('./adminAuth');
+const adminAuthRoutes = require('./adminAuth').router;
 
 require('dotenv').config();
 
@@ -11,19 +11,9 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 
 const app = express();
-app.set('trust proxy', 1);
 app.use(helmet());
-app.use(cors({
-  origin: [
-    'http://localhost:5173', 
-    'https://g-tec-nagercoil.vercel.app'
-  ],
-  credentials: true,
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
+app.use(cors());
 app.use(express.json());
-
-app.get('/ping', (req, res) => res.send('pong'));
 
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -221,9 +211,10 @@ app.get('/api/india/pincode/:pin', async (req, res) => {
   }
 });
 
+{/*---------- Course Category verification section ----------*/}
 
 // REPLACE your current POST route with this:
-app.post('/api/categories',verifyAdminToken, async (req, res) => {
+app.post('/api/categories', async (req, res) => {
   try {
     const { name, slug, description, explorerDescription, headline, image } = req.body; 
     const newCategory = new Category({ name, slug, description, explorerDescription, headline, image });
@@ -246,7 +237,7 @@ app.get('/api/categories', async (req, res) => {
 
 //3. Update Category
 
-app.put('/api/categories/:id',verifyAdminToken, async (req, res) => {
+app.put('/api/categories/:id', async (req, res) => {
   try {
     const { name, slug, description, explorerDescription, headline, image } = req.body;
     await Category.findByIdAndUpdate(
@@ -261,7 +252,7 @@ app.put('/api/categories/:id',verifyAdminToken, async (req, res) => {
 });
 
 // 4. Delete Category
-app.delete('/api/categories/:id',verifyAdminToken, async (req, res) => {
+app.delete('/api/categories/:id', async (req, res) => {
   try {
     await Category.findByIdAndDelete(req.params.id);
     res.json({ success: true, message: "Category deleted" });
@@ -270,6 +261,7 @@ app.delete('/api/categories/:id',verifyAdminToken, async (req, res) => {
   }
 });
 
+{/* ---------- Chatbot Section ---------- */}
 
 app.post('/api/chatbot', async (req, res) => {
   try {
@@ -292,7 +284,7 @@ app.get('/api/inquiries', async (req, res) => {
 });
 
 // ✅ 2. Delete an inquiry
-app.delete('/api/inquiries/:id',verifyAdminToken, async (req, res) => {
+app.delete('/api/inquiries/:id', async (req, res) => {
   try {
     await Inquiry.findByIdAndDelete(req.params.id);
     res.json({ success: true, message: "Inquiry deleted!" });
@@ -301,6 +293,7 @@ app.delete('/api/inquiries/:id',verifyAdminToken, async (req, res) => {
   }
 });
 
+{/* ---------- Offers Section ---------- */}
 
 app.get('/api/offers', async (req, res) => {
   try {
@@ -311,7 +304,7 @@ app.get('/api/offers', async (req, res) => {
   }
 });
 
-app.post('/api/offers',verifyAdminToken, async (req, res) => {
+app.post('/api/offers', async (req, res) => {
   try {
     const newOffer = new Offer(req.body);
     await newOffer.save();
@@ -321,7 +314,7 @@ app.post('/api/offers',verifyAdminToken, async (req, res) => {
   }
 });
 
-app.put('/api/offers/:id',verifyAdminToken, async (req, res) => {
+app.put('/api/offers/:id', async (req, res) => {
   try {
     await Offer.findByIdAndUpdate(req.params.id, req.body, { new: true });
     res.json({ success: true, message: "Offer updated successfully!" });
@@ -330,7 +323,7 @@ app.put('/api/offers/:id',verifyAdminToken, async (req, res) => {
   }
 });
 
-app.delete('/api/offers/:id',verifyAdminToken, async (req, res) => {
+app.delete('/api/offers/:id', async (req, res) => {
   try {
     await Offer.findByIdAndDelete(req.params.id);
     res.json({ success: true, message: "Offer deleted!" });
@@ -339,6 +332,7 @@ app.delete('/api/offers/:id',verifyAdminToken, async (req, res) => {
   }
 });
 
+{/*------------------ Game Logic Section ---------------*/}
 
 app.post('/api/gamescores/add', async (req, res) => {
   try {
@@ -361,6 +355,7 @@ app.get('/api/gamescores/all', async (req, res) => {
   }
 });
 
+{/*------------------ MailSection ---------------*/}
 
 // ✅ 1. TRACKING PIXEL ROUTE (Marks inquiry as 'Read' when email is opened)
 app.get('/api/contact-inquiries/:id/track-read', async (req, res) => {
@@ -489,6 +484,7 @@ app.get('/api/contact-inquiries', async (req, res) => {
   }
 });
 
+{/* -------- Course Section -------- */}
 
 app.get('/api/courses', async (req, res) => {
   try {
@@ -499,7 +495,7 @@ app.get('/api/courses', async (req, res) => {
   }
 });
 
-app.post('/api/courses',verifyAdminToken, async (req, res) => {
+app.post('/api/courses', async (req, res) => {
   try {
     const newCourse = new Course(req.body);
     await newCourse.save();
@@ -509,7 +505,7 @@ app.post('/api/courses',verifyAdminToken, async (req, res) => {
   }
 });
 
-app.put('/api/courses/:id',verifyAdminToken, async (req, res) => {
+app.put('/api/courses/:id', async (req, res) => {
   try {
     await Course.findByIdAndUpdate(req.params.id, req.body, { new: true });
     res.json({ success: true, message: "Course updated successfully!" });
@@ -518,7 +514,7 @@ app.put('/api/courses/:id',verifyAdminToken, async (req, res) => {
   }
 });
 
-app.delete('/api/courses/:id',verifyAdminToken, async (req, res) => {
+app.delete('/api/courses/:id', async (req, res) => {
   try {
     await Course.findByIdAndDelete(req.params.id);
     res.json({ success: true, message: "Course deleted!" });
@@ -528,8 +524,9 @@ app.delete('/api/courses/:id',verifyAdminToken, async (req, res) => {
 });
 
 
+{/* ------ students Detail section ----- */}
 
-app.get('/api/students',verifyAdminToken, async (req, res) => {
+app.get('/api/students', async (req, res) => {
   try {
     const activeStudents = await Student.find({ isArchived: { $ne: true } }).sort({ createdAt: -1 });
     res.json(activeStudents);
@@ -538,7 +535,7 @@ app.get('/api/students',verifyAdminToken, async (req, res) => {
   }
 });
 
-app.get('/api/students/all',verifyAdminToken, async (req, res) => {
+app.get('/api/students/all', async (req, res) => {
   try {
     const allStudents = await Student.find().sort({ createdAt: -1 });
     res.json(allStudents);
@@ -546,8 +543,6 @@ app.get('/api/students/all',verifyAdminToken, async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
-
-
 
 app.post('/api/enroll', async (req, res) => {
   try {
@@ -635,7 +630,7 @@ app.post('/api/enroll', async (req, res) => {
   }
 });
 
-app.post('/api/students/bulk-email', verifyAdminToken, async (req, res) => {
+app.post('/api/students/bulk-email', async (req, res) => {
   const { studentIds } = req.body;
   
   try {
@@ -717,7 +712,7 @@ app.post('/api/students/bulk-email', verifyAdminToken, async (req, res) => {
 });
 
 // ✅ API to MANUALLY SEND SMS (Triggered by Admin Panel Button)
-app.post('/api/students/:id/send-email', verifyAdminToken, async (req, res) => {
+app.post('/api/students/:id/send-email', async (req, res) => {
   try {
     const student = await Student.findById(req.params.id);
     if(!student) return res.status(404).json({ error: "Student not found" });
@@ -785,7 +780,7 @@ app.post('/api/students/:id/send-email', verifyAdminToken, async (req, res) => {
 });
 
 // ✅ API to UPDATE an existing student
-app.put('/api/students/:id', verifyAdminToken, async (req, res) => {
+app.put('/api/students/:id', async (req, res) => {
   try {
     // ⚠️ CRITICAL: We use findByIdAndUpdate, NOT "new Student()"
     await Student.findByIdAndUpdate(req.params.id, req.body, { new: true });

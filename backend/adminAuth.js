@@ -358,8 +358,4 @@ router.post(
     }
   }
 );
-
-module.exports = {
-  router,
-  verifyAdminToken,
-};
+module.exports = router;
