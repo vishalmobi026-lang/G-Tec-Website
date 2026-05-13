@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Info, Phone, Users, MapPin, BookOpen, MessageCircleQuestionMark, ChevronDown, LayoutGrid, 
   User, Settings, LogOut, Menu, X, Gamepad2, Trophy, MessageSquareDot } from "lucide-react";
 import { Link } from "react-router-dom";
-const API_BASE_URL = import.meta.env.VITE_API_URI;
+
 export default function HeaderSection() {
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
@@ -52,7 +52,7 @@ export default function HeaderSection() {
     setIsAdmin(!!token);
 
     // 2. Fetch categories from your backend
-    fetch(`${API_BASE_URL}/api/categories`)
+    fetch("http://localhost:5000/api/categories")
       .then(res => res.json())
       .then(data => {
         // ✅ SAFETY CHECK: Only save it if it's an actual array list
@@ -71,10 +71,10 @@ export default function HeaderSection() {
   return (
     <>
       <header
-  className={`fixed w-full top-0 z-1000 bg-blue-900/95 backdrop-blur-md border-b border-white/10 transition-transform duration-500 ease-in-out ${
-    isVisible ? "translate-y-0" : "-translate-y-full"
-  }`}
->
+        className={`fixed w-full top-0 z-100 bg-blue-900/95 backdrop-blur-md border-b border-white/10 transition-transform duration-500 ease-in-out ${
+          isVisible ? "translate-y-0" : "-translate-y-full"
+        }`}
+      >
         <div className="max-w-362.5 mx-auto px-4 lg:px-8 h-28 flex items-center justify-between">
           
           {/* Logo Section - Preserved exactly as requested */}
