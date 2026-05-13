@@ -71,10 +71,10 @@ export default function HeaderSection() {
   return (
     <>
       <header
-        className={`fixed w-full top-0 z-100 bg-blue-900/95 backdrop-blur-md border-b border-white/10 transition-transform duration-500 ease-in-out ${
-          isVisible ? "translate-y-0" : "-translate-y-full"
-        }`}
-      >
+  className={`fixed w-full top-0 z-1000 bg-blue-900/95 backdrop-blur-md border-b border-white/10 transition-transform duration-500 ease-in-out ${
+    isVisible ? "translate-y-0" : "-translate-y-full"
+  }`}
+>
         <div className="max-w-362.5 mx-auto px-4 lg:px-8 h-28 flex items-center justify-between">
           
           {/* Logo Section - Preserved exactly as requested */}
