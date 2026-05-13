@@ -7,355 +7,97 @@ require('dotenv').config();
 
 const router = express.Router();
 
-// ==========================================
-// ENV VARIABLES
-// ==========================================
-
-const username = process.env.USER_NAME || "admin";
-const password = process.env.PASSWORD || "admin123";
-
-const JWT_SECRET =
-  process.env.JWT_SECRET || "fallback_jwt_secret";
-
-const HASHED_SECRET =
-  process.env.HASHED_SECRET ||
-  "fallback_hashed_secret";
-
-// ==========================================
-// JWT VERIFY MIDDLEWARE
-// ==========================================
-
-const verifyAdminToken = (req, res, next) => {
-  try {
-    const authHeader = req.headers.authorization;
-
-    if (
-      !authHeader ||
-      !authHeader.startsWith("Bearer ")
-    ) {
-      return res.status(401).json({
-        success: false,
-        message:
-          "Access denied. No token provided.",
-      });
-    }
-
-    const token = authHeader.split(" ")[1];
-
-    const decoded = jwt.verify(
-      token,
-      JWT_SECRET
-    );
-
-    req.admin = decoded;
-
-    next();
-  } catch (err) {
-    console.error(
-      "JWT Verification Error:",
-      err
-    );
-
-    return res.status(401).json({
-      success: false,
-      message: "Invalid or expired token",
-    });
-  }
-};
-
-// ==========================================
-// ADMIN SCHEMA
-// ==========================================
+const username= process.env.USER_NAME;
+const password = process.env.PASSWORD;
+const JWT_SECRET = process.env.JWT_SECRET;
+const HASHED_SECRET = process.env.HASHED_SECRET;
 
 const adminSchema = new mongoose.Schema({
-  username: {
-    type: String,
-    required: true,
-  },
+  username: { type: String, required: true },
+  password: { type: String, required: true },
+  secretKey: { type: String, required: true } 
+});
+const Admin = mongoose.model('Admin', adminSchema);
 
-  password: {
-    type: String,
-    required: true,
-  },
 
-  secretKey: {
-    type: String,
-    required: true,
-  },
+
+router.post('/setup', async (req, res) => {
+  const adminExists = await Admin.findOne();
+  if (adminExists) return res.status(400).json({ message: "Admin already exists!" });
+
+  const hashedPassword = await bcrypt.hash(password, 10);
+  const hashedSecret = await bcrypt.hash(HASHED_SECRET, 10);
+
+  const newAdmin = new Admin({
+    username: username,
+    password: hashedPassword,
+    secretKey: hashedSecret
+  });
+
+  await newAdmin.save();
+  res.json({ message: "Admin created successfully!" });
 });
 
-const Admin = mongoose.model(
-  'Admin',
-  adminSchema
-);
+router.post('/login', async (req, res) => {
+  const { username, password } = req.body;
 
-// ==========================================
-// AUTO CREATE DEFAULT ADMIN
-// ==========================================
+  const admin = await Admin.findOne({ username });
+  if (!admin) return res.status(401).json({ message: "Invalid credentials" });
 
-async function ensureDefaultAdmin() {
-  try {
-    const adminCount =
-      await Admin.countDocuments();
+  const isMatch = await bcrypt.compare(password, admin.password);
+  if (!isMatch) return res.status(401).json({ message: "Invalid credentials" });
 
-    if (adminCount === 0) {
-      const hashedPassword =
-        await bcrypt.hash(password, 10);
+  const token = jwt.sign({ id: admin._id, role: "admin" }, JWT_SECRET, { expiresIn: "24h" });
 
-      const hashedSecret =
-        await bcrypt.hash(
-          HASHED_SECRET,
-          10
-        );
+  res.json({ success: true, token, username: admin.username });
+});
 
-      const newAdmin = new Admin({
-        username,
-        password: hashedPassword,
-        secretKey: hashedSecret,
-      });
+router.post('/update-credentials', async (req, res) => {
+  const { currentUsername, secretKey, newUsername, newPassword } = req.body;
 
-      await newAdmin.save();
+  const admin = await Admin.findOne({ username: currentUsername });
+  if (!admin) return res.status(404).json({ message: "Admin not found" });
 
-      console.log(
-        "✅ Default admin created:",
-        username
-      );
-    }
-  } catch (err) {
-    console.error(
-      "❌ Admin init failed:",
-      err
-    );
+  const isKeyValid = await bcrypt.compare(secretKey, admin.secretKey);
+  if (!isKeyValid) return res.status(403).json({ message: "Invalid Secret Key. Access Denied." });
+
+  if (newUsername) admin.username = newUsername;
+  if (newPassword) {
+    admin.password = await bcrypt.hash(newPassword, 10);
   }
-}
 
-// ==========================================
-// DB CONNECTION CHECK
-// ==========================================
+  await admin.save();
+  res.json({ success: true, message: "Credentials updated successfully!" });
+});
 
-if (mongoose.connection.readyState === 1) {
-  ensureDefaultAdmin();
-} else {
-  mongoose.connection.once(
-    'open',
-    () => {
-      ensureDefaultAdmin();
-    }
-  );
-}
-
-// ==========================================
-// ROUTES
-// ==========================================
-
-// ==========================================
-// 1. RESET ADMIN
-// ==========================================
-
+// 2. Initial Setup Route (Updated for a Clean Reset)
 router.get('/setup', async (req, res) => {
   try {
-    await Admin.deleteMany({});
+    // This deletes the old admin so we can start fresh
+    await Admin.deleteMany({}); 
 
-    const hashedPassword =
-      await bcrypt.hash(password, 10);
-
-    const hashedSecret =
-      await bcrypt.hash(
-        HASHED_SECRET,
-        10
-      );
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedSecret = await bcrypt.hash(HASHED_SECRET, 10);
 
     const newAdmin = new Admin({
-      username,
+      username: username,
       password: hashedPassword,
-      secretKey: hashedSecret,
+      secretKey: hashedSecret
     });
 
     await newAdmin.save();
-
-    res.json({
-      success: true,
-      message:
-        "Admin Reset Successful!",
-      createdUser: username,
+    res.json({ 
+      success: true, 
+      message: "Admin Reset Successful!",
+      loginDetails: {
+        url: "http://localhost:3000/login",
+        user: username,
+        pass: password
+      }
     });
   } catch (err) {
-    console.error(
-      "Setup Route Error:",
-      err
-    );
-
-    res.status(500).json({
-      success: false,
-      error: err.message,
-    });
+    res.status(500).json({ error: err.message });
   }
 });
 
-// ==========================================
-// 2. LOGIN
-// ==========================================
-
-router.post('/login', async (req, res) => {
-  try {
-    const {
-      username: reqUsername,
-      password: reqPassword,
-    } = req.body;
-
-    const admin = await Admin.findOne({
-      username: reqUsername,
-    });
-
-    if (!admin) {
-      return res.status(401).json({
-        success: false,
-        message: "Invalid credentials",
-      });
-    }
-
-    const isMatch =
-      await bcrypt.compare(
-        reqPassword,
-        admin.password
-      );
-
-    if (!isMatch) {
-      return res.status(401).json({
-        success: false,
-        message: "Invalid credentials",
-      });
-    }
-
-    const token = jwt.sign(
-      {
-        id: admin._id,
-        role: "admin",
-      },
-      JWT_SECRET,
-      {
-        expiresIn: "24h",
-      }
-    );
-
-    res.json({
-      success: true,
-      token,
-      username: admin.username,
-    });
-  } catch (err) {
-    console.error(
-      "Login Error:",
-      err
-    );
-
-    res.status(500).json({
-      success: false,
-      message: "Server error",
-    });
-  }
-});
-
-// ==========================================
-// 3. VERIFY TOKEN
-// ==========================================
-
-router.get(
-  '/verify',
-  verifyAdminToken,
-  async (req, res) => {
-    try {
-      res.json({
-        success: true,
-        admin: req.admin,
-      });
-    } catch (err) {
-      console.error(
-        "Verify Error:",
-        err
-      );
-
-      res.status(500).json({
-        success: false,
-        message: "Server error",
-      });
-    }
-  }
-);
-
-// ==========================================
-// 4. UPDATE CREDENTIALS
-// ==========================================
-
-router.post(
-  '/update-credentials',
-  verifyAdminToken,
-  async (req, res) => {
-    try {
-      const {
-        currentUsername,
-        secretKey,
-        newUsername,
-        newPassword,
-      } = req.body;
-
-      const admin =
-        await Admin.findOne({
-          username: currentUsername,
-        });
-
-      if (!admin) {
-        return res.status(404).json({
-          success: false,
-          message: "Admin not found",
-        });
-      }
-
-      const isKeyValid =
-        await bcrypt.compare(
-          secretKey,
-          admin.secretKey
-        );
-
-      if (!isKeyValid) {
-        return res.status(403).json({
-          success: false,
-          message:
-            "Invalid Secret Key",
-        });
-      }
-
-      if (newUsername) {
-        admin.username =
-          newUsername;
-      }
-
-      if (newPassword) {
-        admin.password =
-          await bcrypt.hash(
-            newPassword,
-            10
-          );
-      }
-
-      await admin.save();
-
-      res.json({
-        success: true,
-        message:
-          "Credentials updated successfully!",
-      });
-    } catch (err) {
-      console.error(
-        "Update Credentials Error:",
-        err
-      );
-
-      res.status(500).json({
-        success: false,
-        message: "Server error",
-      });
-    }
-  }
-);
 module.exports = router;
