@@ -19,11 +19,9 @@ export default function HeaderSection() {
     const token = localStorage.getItem("adminToken");
     setIsAdmin(!!token);
 
-    // 2. Fetch categories from your backend
     fetch(`${API_BASE_URL}/api/categories`)
       .then(res => res.json())
       .then(data => {
-        // ✅ SAFETY CHECK: Only save it if it's an actual array list
         if (Array.isArray(data)) {
           setCourseCategories(data);
         } else {
