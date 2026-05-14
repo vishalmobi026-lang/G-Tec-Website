@@ -16,8 +16,6 @@ import {
   CheckSquare
 } from "lucide-react"; // <-- Added Mail
 import { motion, AnimatePresence } from "framer-motion";
-import HeaderSection from "../Main/Header";
-import FooterSection from "../Main/Footer";
  const API_BASE_URL = import.meta.env.VITE_API_URI;
 export default function StudentsTab() {
   const [students, setStudents] = useState([]);
@@ -173,8 +171,6 @@ export default function StudentsTab() {
   const categories = [...new Set(allCourses.map((c) => c.category))];
 
   return (
-    <>
-    <HeaderSection />
     <div className="min-h-screen bg-gray-50 p-8 pt-50 pb-60 font-sans">
       <div className="max-w-[1400px] mx-auto">
         {/* Header & Search */}
@@ -677,7 +673,5 @@ export default function StudentsTab() {
         }
       `}</style>
     </div>
-    <FooterSection />
-    </>
   );
 }
