@@ -2,56 +2,26 @@ import React, { useState, useEffect } from "react";
 import { Info, Phone, Users, MapPin, BookOpen, MessageCircleQuestionMark, ChevronDown, LayoutGrid, 
   User, Settings, LogOut, Menu, X, Gamepad2, Trophy, MessageSquareDot } from "lucide-react";
 import { Link } from "react-router-dom";
-
-import { useNavigate } from "react-router-dom";
-
 const API_BASE_URL = import.meta.env.VITE_API_URI;
 export default function HeaderSection() {
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
   const [isAdmin, setIsAdmin] = useState(false);
   const [courseCategories, setCourseCategories] = useState([]);
-  const navigate = useNavigate();
+  
   // State to control the mobile menu
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem("adminToken");
     setIsAdmin(!!token);
-
-    fetch(`${API_BASE_URL}/api/categories`)
-      .then(res => res.json())
-      .then(data => {
-        if (Array.isArray(data)) {
-          setCourseCategories(data);
-        } else {
-          setCourseCategories([]); // Prevent .map crashes
-        }
-      })
-      .catch(err => {
-        console.error("Failed to fetch categories for header", err);
-        setCourseCategories([]); // Fallback to empty array on error
-      });
   }, []);
 
   const handleLogout = () => {
     localStorage.removeItem("adminToken");
     localStorage.removeItem("adminUser");
-    window.dispatchEvent(new Event("storage")); 
-  navigate("/");
+    window.location.href = "/"; // Redirect to home
   };
-
-  // NEW: Listen for the "storage" event triggered by LoginPage or Logout
-  useEffect(() => {
-    const handleStorageChange = () => {
-      const token = localStorage.getItem("adminToken");
-      setIsAdmin(!!token);
-    };
-    window.addEventListener("storage", handleStorageChange);
-    return () => {
-      window.removeEventListener("storage", handleStorageChange);
-    };
-  }, []);
 
 
   useEffect(() => {
@@ -77,7 +47,26 @@ export default function HeaderSection() {
     }
   }, [isMobileMenuOpen]);
 
-  
+  useEffect(() => {
+    const token = localStorage.getItem("adminToken");
+    setIsAdmin(!!token);
+
+    // 2. Fetch categories from your backend
+    fetch(`${API_BASE_URL}/api/categories`)
+      .then(res => res.json())
+      .then(data => {
+        // ✅ SAFETY CHECK: Only save it if it's an actual array list
+        if (Array.isArray(data)) {
+          setCourseCategories(data);
+        } else {
+          setCourseCategories([]); // Prevent .map crashes
+        }
+      })
+      .catch(err => {
+        console.error("Failed to fetch categories for header", err);
+        setCourseCategories([]); // Fallback to empty array on error
+      });
+  }, []);
 
   return (
     <>
