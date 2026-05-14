@@ -2,7 +2,8 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Lock, User, Eye, EyeOff, LogIn, AlertCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-
+import HeaderSection from "./Main/Header";
+import FooterSection from "./Main/Footer";
 export default function LoginPage() {
   const [formData, setFormData] = useState({ username: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
@@ -43,6 +44,8 @@ export default function LoginPage() {
   };
 
   return (
+    <>
+    <HeaderSection />
     <div className="min-h-screen bg-zinc-950 flex items-center justify-center px-6 py-50">
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
@@ -108,5 +111,7 @@ export default function LoginPage() {
         </form>
       </motion.div>
     </div>
+    <FooterSection />
+    </>
   );
 }
