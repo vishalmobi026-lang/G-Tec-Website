@@ -1,12 +1,8 @@
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-  useLocation,
-} from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { AnimatePresence } from "framer-motion";
 import "./App.css";
+
 import Preloader from "./PreLoader";
 
 import HeaderSection from "./Main/Header";
@@ -14,7 +10,7 @@ import HomeSection from "./HomeComponents/HomeSection";
 import FooterSection from "./Main/Footer";
 import EnrollmentForm from "./Enrollment/EnrollmentForm";
 import AboutSection from "./AboutUsComponents/Aboutus";
-import Course from "./Course/Course"
+import Course from "./Course/Course";
 import ContactUs from "./ContactUs/ContactUs";
 import Chatbot from "./Chatbot/Chatbot";
 import GameLauncherWidget from "./GameSection/GameLauncherWidget";
@@ -45,24 +41,16 @@ function AppContent() {
     return () => clearTimeout(timer);
   }, [location.pathname]);
 
-  // Check if we are on the game page (optional: hide header/footer there if needed)
-  const isGamePage = location.pathname === "/game";
-
   return (
-    /* THE FIX: Use a flex column with min-h-screen. 
-       This ensures the Footer stays at the bottom even on short pages.
-    */
-    <div className="flex flex-col min-h-screen bg-zinc-950">
+    <>
       <AnimatePresence>
         {isPageLoading && <Preloader />}
       </AnimatePresence>
 
-      {!isGamePage && <HeaderSection />}
+      {/* 🔴 HEADER FORCED ON EVERY SINGLE PAGE 🔴 */}
+      <HeaderSection />
 
-      {/* THE FIX: 'flex-1' grows to fill space, 'pt-28' (or your header height) 
-          prevents content from going under the fixed header.
-      */}
-      <main className={`flex-1 ${!isGamePage ? "pt-24 md:pt-28" : ""}`}>
+      <main className="flex-grow">
         <AnimatePresence mode="wait">
           <Routes location={location} key={location.pathname}>
             <Route path="/game" element={<NeonStrikeGame />} />
@@ -74,7 +62,7 @@ function AppContent() {
             <Route path="/enroll" element={<EnrollmentForm />} />
             <Route path="/login" element={<LoginPage />} />
             
-            {/* Admin Routes - These will now have the Header/Footer visible */}
+            {/* Admin Routes */}
             <Route path="/admin/students" element={<StudentsTab />} />
             <Route path="/admin/enrollment-log" element={<StudentsEnrollment />} />
             <Route path="/admin/courses" element={<WebUpdater />} />
@@ -86,14 +74,11 @@ function AppContent() {
         </AnimatePresence>
       </main>
       
-      {!isGamePage && (
-        <>
-          <Chatbot />
-          <GameLauncherWidget />
-          <FooterSection />
-        </>
-      )}
-    </div>
+      {/* 🔴 FOOTER FORCED ON EVERY SINGLE PAGE 🔴 */}
+      <Chatbot />
+      <GameLauncherWidget />
+      <FooterSection />
+    </>
   );
 }
 

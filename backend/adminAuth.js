@@ -6,7 +6,7 @@ const mongoose = require('mongoose');
 require('dotenv').config();
 
 const router = express.Router();
-const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000";
+const BACKEND_URL = process.env.BACKEND_URL || "http://localhost:3000";
 const username= process.env.USER_NAME;
 const password = process.env.PASSWORD;
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -90,7 +90,7 @@ router.get('/setup', async (req, res) => {
       success: true, 
       message: "Admin Reset Successful!",
       loginDetails: {
-        url: `${FRONTEND_URL}/login`,
+        url: `${BACKEND_URL}/login`,
         user: username,
         pass: password
       }
