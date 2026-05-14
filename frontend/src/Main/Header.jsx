@@ -15,6 +15,27 @@ export default function HeaderSection() {
   // State to control the mobile menu
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
+  useEffect(() => {
+    const token = localStorage.getItem("adminToken");
+    setIsAdmin(!!token);
+
+    // 2. Fetch categories from your backend
+    fetch(`${API_BASE_URL}/api/categories`)
+      .then(res => res.json())
+      .then(data => {
+        // ✅ SAFETY CHECK: Only save it if it's an actual array list
+        if (Array.isArray(data)) {
+          setCourseCategories(data);
+        } else {
+          setCourseCategories([]); // Prevent .map crashes
+        }
+      })
+      .catch(err => {
+        console.error("Failed to fetch categories for header", err);
+        setCourseCategories([]); // Fallback to empty array on error
+      });
+  }, []);
+
   const handleLogout = () => {
     localStorage.removeItem("adminToken");
     localStorage.removeItem("adminUser");
@@ -58,26 +79,7 @@ export default function HeaderSection() {
     }
   }, [isMobileMenuOpen]);
 
-  useEffect(() => {
-    const token = localStorage.getItem("adminToken");
-    setIsAdmin(!!token);
-
-    // 2. Fetch categories from your backend
-    fetch(`${API_BASE_URL}/api/categories`)
-      .then(res => res.json())
-      .then(data => {
-        // ✅ SAFETY CHECK: Only save it if it's an actual array list
-        if (Array.isArray(data)) {
-          setCourseCategories(data);
-        } else {
-          setCourseCategories([]); // Prevent .map crashes
-        }
-      })
-      .catch(err => {
-        console.error("Failed to fetch categories for header", err);
-        setCourseCategories([]); // Fallback to empty array on error
-      });
-  }, []);
+  
 
   return (
     <>
