@@ -2,26 +2,35 @@ import React, { useState, useEffect } from "react";
 import { Info, Phone, Users, MapPin, BookOpen, MessageCircleQuestionMark, ChevronDown, LayoutGrid, 
   User, Settings, LogOut, Menu, X, Gamepad2, Trophy, MessageSquareDot } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 const API_BASE_URL = import.meta.env.VITE_API_URI;
 export default function HeaderSection() {
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
   const [isAdmin, setIsAdmin] = useState(false);
   const [courseCategories, setCourseCategories] = useState([]);
-  
+  const navigate = useNavigate();
   // State to control the mobile menu
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
-  useEffect(() => {
-    const token = localStorage.getItem("adminToken");
-    setIsAdmin(!!token);
-  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem("adminToken");
     localStorage.removeItem("adminUser");
-    window.location.href = "/"; // Redirect to home
+    window.dispatchEvent(new Event("storage")); 
+  navigate("/");
   };
+
+  // NEW: Listen for the "storage" event triggered by LoginPage or Logout
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const token = localStorage.getItem("adminToken");
+      setIsAdmin(!!token);
+    };
+    window.addEventListener("storage", handleStorageChange);
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+    };
+  }, []);
 
 
   useEffect(() => {

@@ -2,6 +2,7 @@ import React from "react";
 import { motion } from "framer-motion";
 import { MapPin, Phone, Mail } from "lucide-react"; 
 import { Link } from "react-router-dom";
+import { link } from "../../../backend/adminAuth";
 
 export default function FooterSection() {
   const containerVariants = {
@@ -89,9 +90,9 @@ export default function FooterSection() {
               className="flex flex-wrap gap-2 md:gap-3"
             >
               {[
-                { name: 'instagram', color: 'white' },
-                { name: 'x', color: 'white' },
-                { name: 'facebook', color: 'white' }
+                { name: 'instagram', color: 'white', link: 'https://www.instagram.com/g_tec_nagercoil/' },
+                { name: 'x', color: 'white', link: 'https://twitter.com/gtec_nagercoil' },
+                { name: 'facebook', color: 'white', link: 'https://www.facebook.com/gtec.nagercoil' }
               ].map((social) => (
                 <motion.a 
                   key={social.name} 
