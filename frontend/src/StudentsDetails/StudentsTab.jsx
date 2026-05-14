@@ -16,6 +16,8 @@ import {
   CheckSquare
 } from "lucide-react"; // <-- Added Mail
 import { motion, AnimatePresence } from "framer-motion";
+import HeaderSection from "../Main/Header";
+import FooterSection from "../Main/Footer";
  const API_BASE_URL = import.meta.env.VITE_API_URI;
 export default function StudentsTab() {
   const [students, setStudents] = useState([]);
@@ -171,6 +173,8 @@ export default function StudentsTab() {
   const categories = [...new Set(allCourses.map((c) => c.category))];
 
   return (
+    <>
+    <HeaderSection />
     <div className="min-h-screen bg-gray-50 p-8 pt-50 pb-60 font-sans">
       <div className="max-w-[1400px] mx-auto">
         {/* Header & Search */}
@@ -232,7 +236,7 @@ export default function StudentsTab() {
                   <th className="p-5 text-xs font-bold text-gray-500 uppercase tracking-wider">Date</th>
                   <th className="p-5 text-xs font-bold text-gray-500 uppercase tracking-wider">Student</th>
                   <th className="p-5 text-xs font-bold text-gray-500 uppercase tracking-wider">Course</th>
-                  <th className="p-5 text-xs font-bold text-gray-500 uppercase tracking-wider">Full Address</th>
+                  <th className="p-5 text-xs font-bold text-gray-500 uppercase tracking-wider">Full Address Details</th>
                   <th className="p-5 text-xs font-bold text-gray-500 uppercase tracking-wider text-center">Actions</th>
                 </tr>
               </thead>
@@ -673,5 +677,7 @@ export default function StudentsTab() {
         }
       `}</style>
     </div>
+    <FooterSection />
+    </>
   );
 }
