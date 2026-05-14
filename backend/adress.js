@@ -23,7 +23,7 @@ const apiLimiter = rateLimit({
 
 app.use('/api/', apiLimiter);
 
-const MONGO_URI = 'mongodb://127.0.0.1:27017/gtec_database';
+const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/gtec_database';
 const BACKEND_URL = process.env.BACKEND_URL;
 const nodemailer = require('nodemailer');
 const EMAIL_USER=process.env.EMAIL_USER;
@@ -543,48 +543,6 @@ app.get('/api/students/all', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
-
-{/* 
-  app.put('/api/students/:id', async (req, res) => {
-  try {
-    // 1. Save the student to MongoDB
-    const newStudent = new Student(req.body);
-    await newStudent.save();
-
-    // 2. Prepare the personalized SMS message
-    const messageText = `Welcome to G-TEC Nagercoil, ${newStudent.name}! Your enrollment for the ${newStudent.course} course is successfully registered. We will contact you shortly.`;
-
-    // 3. Send the SMS using Fast2SMS API
-    if (newStudent.phone) {
-      try {
-        await axios({
-          method: 'POST',
-          url: 'https://www.fast2sms.com/dev/bulkV2',
-          headers: {
-            'authorization': process.env.FAST2SMS_API_KEY,
-            'Content-Type': 'application/json'
-          },
-          data: {
-            route: 'q', // Quick transactional route
-            message: messageText,
-            language: 'english',
-            flash: 0,
-            numbers: newStudent.phone // Ensure phone is a 10-digit Indian number
-          }
-        });
-        console.log(`✅ SMS sent successfully to ${newStudent.phone}`);
-      } catch (smsError) {
-        console.error("❌ Failed to send SMS:", smsError.response ? smsError.response.data : smsError.message);
-        // We don't return an error to the frontend here, because the enrollment was still successful
-      }
-    }
-
-    res.json({ success: true, message: "Student enrolled & SMS sent successfully!" });
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-});*/
-}
 
 app.post('/api/enroll', async (req, res) => {
   try {
