@@ -29,8 +29,10 @@ export default function LoginPage() {
         localStorage.setItem("adminToken", data.token);
         localStorage.setItem("adminUser", data.username);
         
+        // Refresh the page or navigate to trigger Header update
         navigate("/admin/students"); 
         
+        // Force the Header to re-evaluate the login state
         window.dispatchEvent(new Event("storage"));
       } else {
         setError(data.message || "Invalid credentials");

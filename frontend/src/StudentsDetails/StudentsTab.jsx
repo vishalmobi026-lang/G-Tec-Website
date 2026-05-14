@@ -232,7 +232,7 @@ export default function StudentsTab() {
                   <th className="p-5 text-xs font-bold text-gray-500 uppercase tracking-wider">Date</th>
                   <th className="p-5 text-xs font-bold text-gray-500 uppercase tracking-wider">Student</th>
                   <th className="p-5 text-xs font-bold text-gray-500 uppercase tracking-wider">Course</th>
-                  <th className="p-5 text-xs font-bold text-gray-500 uppercase tracking-wider">Full Address Details</th>
+                  <th className="p-5 text-xs font-bold text-gray-500 uppercase tracking-wider">Full Address</th>
                   <th className="p-5 text-xs font-bold text-gray-500 uppercase tracking-wider text-center">Actions</th>
                 </tr>
               </thead>
