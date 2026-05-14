@@ -2,8 +2,10 @@ import React, { useState, useEffect } from "react";
 import { Info, Phone, Users, MapPin, BookOpen, MessageCircleQuestionMark, ChevronDown, LayoutGrid, 
   User, Settings, LogOut, Menu, X, Gamepad2, Trophy, MessageSquareDot } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 const API_BASE_URL = import.meta.env.VITE_API_URI;
 export default function HeaderSection() {
+  const navigate = useNavigate();
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -15,18 +17,34 @@ export default function HeaderSection() {
   useEffect(() => {
     const token = localStorage.getItem("adminToken");
     setIsAdmin(!!token);
+
+    // 2. Fetch categories from your backend
+    fetch(`${API_BASE_URL}/api/categories`)
+      .then(res => res.json())
+      .then(data => {
+        // ✅ SAFETY CHECK: Only save it if it's an actual array list
+        if (Array.isArray(data)) {
+          setCourseCategories(data);
+        } else {
+          setCourseCategories([]); // Prevent .map crashes
+        }
+      })
+      .catch(err => {
+        console.error("Failed to fetch categories for header", err);
+        setCourseCategories([]); // Fallback to empty array on error
+      });
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem("adminToken");
-    localStorage.removeItem("adminUser");
-    
-    // Dispatch the event so the Header instantly knows we logged out
-    window.dispatchEvent(new Event("storage")); 
-    
-    // Smoothly redirect to home instead of a hard reload
-    window.location.href = "/"; 
-  };
+  localStorage.removeItem("adminToken");
+  localStorage.removeItem("adminUser");
+  
+  // Tell the app the token is gone
+  window.dispatchEvent(new Event("storage")); 
+  
+  // Route back to home
+  navigate("/"); 
+};
 
 useEffect(() => {
     const handleStorageChange = () => {
@@ -66,26 +84,26 @@ useEffect(() => {
     }
   }, [isMobileMenuOpen]);
 
+  
+
   useEffect(() => {
+  // Create a function to check the token
+  const checkAdminStatus = () => {
     const token = localStorage.getItem("adminToken");
     setIsAdmin(!!token);
+  };
 
-    // 2. Fetch categories from your backend
-    fetch(`${API_BASE_URL}/api/categories`)
-      .then(res => res.json())
-      .then(data => {
-        // ✅ SAFETY CHECK: Only save it if it's an actual array list
-        if (Array.isArray(data)) {
-          setCourseCategories(data);
-        } else {
-          setCourseCategories([]); // Prevent .map crashes
-        }
-      })
-      .catch(err => {
-        console.error("Failed to fetch categories for header", err);
-        setCourseCategories([]); // Fallback to empty array on error
-      });
-  }, []);
+  // Run it once when the Header first loads
+  checkAdminStatus();
+
+  // Listen for the event dispatched from LoginPage
+  window.addEventListener("storage", checkAdminStatus);
+
+  // Clean up the listener when the component unmounts
+  return () => {
+    window.removeEventListener("storage", checkAdminStatus);
+  };
+}, []);
 
   return (
     <>
