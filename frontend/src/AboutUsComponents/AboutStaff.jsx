@@ -17,7 +17,7 @@ export default function StaffSection() {
       name: "Sara Johnson",
       role: "Academic Head",
       image:
-        "https://images.unsplash.com/photo-1518518873111-6ca469aa4560?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTR8fGluZGlhbiUyMHBlcnNvbnxlbnwwfHwwfHx8MA%3D%3D",
+        "https://images.unsplash.com/photo-1633268255907-c8d6033204c1?q=80&w=735&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
       socials: { instagram: "#", x: "#", facebook: "#", linkedin: "#" },
     },
     {

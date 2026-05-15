@@ -153,15 +153,15 @@ export default function FooterSection() {
                 <div className="p-2 bg-blue-900/20 rounded-lg shrink-0">
                   <Mail size={16} className="text-blue-500" />
                 </div>
-                <div className="text-[11px] md:text-sm text-zinc-400 overflow-hidden">
+                <div className="text-[10px] md:text-sm text-zinc-400 overflow-hidden">
                   <p className="font-semibold text-zinc-200 mb-0.5">Email</p>
-                  <p className="truncate">infozenxit@gmail.com</p>
+                  <p className="truncate text-[12px]">nagercoil.tn@gteceducation.com</p>
                 </div>
               </motion.li>
             </motion.ul>
           </motion.div>
 
-          <motion.div variants={cardVariants} className="bg-[#111111] hover:bg-[#151515] border border-zinc-800/80 rounded-[1.5rem] p-5 md:p-7 flex flex-col h-full transition-colors duration-300 shadow-xl">
+          <motion.div variants={cardVariants} className="bg-[#111111] hover:bg-[#151515] border border-zinc-800/80 rounded-3xl p-5 md:p-7 flex flex-col h-full transition-colors duration-300 shadow-xl">
             <h4 className="text-sm md:text-lg font-bold mb-4 md:mb-6 text-white border-b border-zinc-800 pb-2">Campus</h4>
             <motion.div 
               variants={listContainerVariants}
@@ -172,7 +172,7 @@ export default function FooterSection() {
                   <MapPin size={16} className="text-blue-500" />
                 </div>
                 <p className="text-[11px] md:text-sm text-zinc-400 leading-relaxed">
-                  Upstair, Tower Jn, Sivaraj Building 2nd Floor, <br className="hidden md:block" />
+                  Upstair, Tower Jn, GST Building 2nd Floor, <br className="hidden md:block" />
                   Rose Centre, Nagercoil, <br className="hidden md:block" />
                   Tamil Nadu 629001
                 </p>

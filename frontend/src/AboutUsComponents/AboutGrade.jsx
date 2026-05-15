@@ -108,13 +108,13 @@ export default function StatsSection() {
             {duplicatedLogos.map((logo, index) => (
               <div
                 key={`${logo.name}-${index}`}
-                className="shrink-0 mx-10 md:mx-16 flex items-center justify-center"
+                className="shrink-0 mx-6 sm:mx-10 md:mx-16 flex items-center justify-center"
               >
                 <img
                   src={logo.src}
                   alt={logo.name}
                   title={logo.name}
-                  className="h-7 md:h-50 w-auto object-contain hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+                  className="h-28 sm:h-32 md:h-44 lg:h-52 w-auto object-contain hover:opacity-100 transition-opacity duration-300 pointer-events-none"
                 />
               </div>
             ))}
