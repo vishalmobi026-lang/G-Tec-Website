@@ -76,7 +76,7 @@ export default function ScoreListener() {
               <thead className="sticky top-0 z-10 bg-slate-50 border-b border-slate-200">
                 <tr>
                   <th className="py-3 px-5 text-[14px] font-bold text-slate-500 uppercase tracking-wider">Player Info</th>
-                  <th className="py-3 px-5 text-[14px] font-bold text-slate-500 uppercase tracking-wider">Performance</th>
+                  <th className="py-3 px-5 text-[14px] font-bold text-slate-500 uppercase tracking-wider">Scholarship</th>
                   <th className="py-3 px-5 text-[14px] font-bold text-slate-500 uppercase tracking-wider">Coupon</th>
                   <th className="py-3 px-5 text-right text-[14px] font-bold text-slate-500 uppercase tracking-wider">Date</th>
                 </tr>
@@ -103,7 +103,9 @@ export default function ScoreListener() {
                         </td>
                         <td className="py-3 px-5">
                           <div className="flex flex-col">
-                            <span className="font-black text-slate-900 text-sm">{contestant.score}</span>
+                            <span className="font-black text-slate-900 text-sm">
+                              {contestant.score === 0 ? "No Offer" : `${Math.min(7, Math.ceil(contestant.score / 1500))}% Discount`}
+                            </span>
                             <span className="text-[9px] text-purple-500 font-bold uppercase">{contestant.course}</span>
                           </div>
                         </td>

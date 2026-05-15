@@ -99,6 +99,7 @@ export default function NeonStrikeGame() {
   const [shake, setShake] = useState(false); 
   const [couponCode, setCouponCode] = useState("");
   const [copied, setCopied] = useState(false);
+  const [isRetrying, setIsRetrying] = useState(false);
   
   const [countries, setCountries] = useState([]);
   const [formData, setFormData] = useState({ name: "", countryCode: "+91", phone: "", course: "" });
@@ -154,6 +155,29 @@ export default function NeonStrikeGame() {
     
     setFormError("");
     setIsFetchingQs(true);
+
+    const fullPhoneNumber = `${formData.countryCode}${formData.phone}`;
+
+    try {
+      // Check if this phone number has already played the game (skip if retrying)
+      if (!isRetrying) {
+        const allScoresResponse = await fetch(`${API_BASE_URL}/api/gamescores/all`);
+        const allScores = await allScoresResponse.json();
+        const phoneExists = allScores.some(score => score.phone === fullPhoneNumber);
+
+        if (phoneExists) {
+          setFormError("This phone number has already played the game. Click 'Retry' to play again with the same number.");
+          setIsFetchingQs(false);
+          return;
+        }
+      }
+      setIsRetrying(false); // Reset retry flag after successful check
+    } catch (error) {
+      console.error("Error checking phone number:", error);
+      setFormError("Unable to verify phone number. Please try again.");
+      setIsFetchingQs(false);
+      return;
+    }
 
     let finalQuestions = [];
 
@@ -271,9 +295,9 @@ export default function NeonStrikeGame() {
           waveCompleted = true; 
 
           if (ent.isCorrect) {
-            const pts = 1000 * state.combo;
+            const pts = 100 * state.combo;
             state.score += pts;
-            state.combo = Math.min(state.combo + 1, 10);
+            state.combo = Math.min(state.combo + 1, 5);
             setCombo(state.combo);
             addFloatingText(`+${pts}`, "text-green-400", state.lane);
           } else {
@@ -805,6 +829,9 @@ export default function NeonStrikeGame() {
         <p className="text-5xl font-light text-white tabular-nums mt-1">
           {score.toLocaleString()}
         </p>
+        <p className="text-emerald-400 text-sm font-bold mt-2">
+          {score === 0 ? "No Discount" : `${Math.min(7, Math.ceil(score / 1500))}% Scholarship`}
+        </p>
       </div>
 
       {/* 3. Scholarship Voucher Tile (Full Width) */}
@@ -841,10 +868,22 @@ export default function NeonStrikeGame() {
     {/* Footer Navigation */}
     <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-6">
       <button 
+        onClick={() => {
+          setIsRetrying(true);
+          setGameState("form");
+        }}
+        className="text-emerald-400 hover:text-emerald-300 text-xs font-bold uppercase tracking-widest transition-colors flex items-center gap-2"
+      >
+        ⚡ Retry
+      </button>
+
+      <div className="hidden sm:block w-px h-4 bg-zinc-800"></div>
+
+      <button 
         onClick={() => setGameState("form")}
         className="text-zinc-400 hover:text-white text-xs font-bold uppercase tracking-widest transition-colors flex items-center gap-2"
       >
-        <X size={14} /> Reset Session
+        <X size={14} /> New Player
       </button>
       
       <div className="hidden sm:block w-px h-4 bg-zinc-800"></div>

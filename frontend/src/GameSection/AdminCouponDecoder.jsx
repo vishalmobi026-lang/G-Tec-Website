@@ -26,20 +26,13 @@ export default function AdminCouponDecoder() {
       const foundStudent = data.find(student => student.couponCode === code);
 
       if (foundStudent) {
-        // Determine the tier dynamically based on the exact score
-        let level = "Base Tier Offer";
-        let discount = "5% Discount";
-        let hits = "Under 5000 Pts";
-
-        if (foundStudent.score > 10000) {
-          level = "Top Tier Offer";
-          discount = "20% Discount";
-          hits = "10,000+ Pts (Pro)";
-        } else if (foundStudent.score > 5000) {
-          level = "Mid Tier Offer";
-          discount = "10% Discount";
-          hits = "5,000+ Pts (Good)";
-        }
+        // Calculate discount based on score: max 7%, minimum 1% for any score > 0
+        const discountPercent = foundStudent.score === 0 ? 0 : Math.min(7, Math.ceil(foundStudent.score / 1500));
+        const discount = discountPercent === 0 ? "No Offer" : `${discountPercent}% Discount`;
+        const level = discountPercent === 0 ? "No Offer" : 
+                     discountPercent >= 5 ? "Premium Offer" : 
+                     discountPercent >= 3 ? "Standard Offer" : "Basic Offer";
+        const hits = foundStudent.score === 0 ? "0 Points" : `${foundStudent.score.toLocaleString()} Points`;
 
         setResult({ 
           valid: true, 

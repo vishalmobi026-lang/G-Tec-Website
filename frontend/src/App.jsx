@@ -50,7 +50,7 @@ function AppContent() {
       {/* 🔴 HEADER FORCED ON EVERY SINGLE PAGE 🔴 */}
       <HeaderSection />
 
-      <main className="flex-grow">
+      <main className="grow">
         <AnimatePresence mode="wait">
           <Routes location={location} key={location.pathname}>
             <Route path="/game" element={<NeonStrikeGame />} />
