@@ -472,14 +472,21 @@ app.post('/api/contact', async (req, res) => {
       `
     };
 
-    // C. Send Email
-    await transporter.sendMail(mailOptions);
-    
-    res.status(200).json({ success: true, message: 'Inquiry securely saved and email dispatched.' });
+    // C. Verify transporter and Send Email (surface errors for deployment debugging)
+    try {
+      await transporter.verify();
+      await transporter.sendMail(mailOptions);
+      res.status(200).json({ success: true, message: 'Inquiry securely saved and email dispatched.' });
+    } catch (mailErr) {
+      console.error('Contact Email Send Error:', mailErr && (mailErr.stack || mailErr));
+      const mailMsg = (mailErr && (mailErr.message || (mailErr.response && mailErr.response.message))) || 'Failed to send contact email';
+      return res.status(500).json({ success: false, message: mailMsg });
+    }
 
   } catch (error) {
-    console.error('Contact Submission Error:', error);
-    res.status(500).json({ success: false, message: 'Failed to process the inquiry.' });
+    console.error('Contact Submission Error:', error && (error.stack || error));
+    const errMsg = (error && (error.message || (error.response && error.response.message))) || 'Failed to process the inquiry.';
+    res.status(500).json({ success: false, message: errMsg });
   }
 });
 
@@ -784,8 +791,10 @@ app.post('/api/students/:id/send-email', async (req, res) => {
     res.json({ success: true, message: "Email sent successfully!" });
 
   } catch (err) {
-    console.error("Email Error:", err);
-    res.status(500).json({ success: false, error: "Failed to send Email" });
+    console.error("Email Error:", err && (err.stack || err));
+    // Return the underlying error message where safe to help debugging in production logs
+    const errMsg = (err && (err.message || (err.response && err.response.message))) || 'Failed to send Email';
+    res.status(500).json({ success: false, error: errMsg });
   }
 });
 

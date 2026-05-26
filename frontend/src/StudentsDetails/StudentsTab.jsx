@@ -125,8 +125,20 @@ export default function StudentsTab() {
         `${API_BASE_URL}/api/students/${id}/send-email`,
         { method: "POST" },
       );
-      if (response.ok) alert("Email sent successfully!");
-      else alert("Failed to send email.");
+      // Attempt to parse JSON response for a helpful message
+      let data = null;
+      try {
+        data = await response.json();
+      } catch (e) {
+        // ignore JSON parse errors
+      }
+
+      if (response.ok) {
+        alert((data && data.message) || "Email sent successfully!");
+      } else {
+        const errMsg = (data && (data.error || data.message)) || response.statusText || "Failed to send email.";
+        alert("Failed to send email: " + errMsg);
+      }
     } catch (err) {
       console.error(err);
     }
