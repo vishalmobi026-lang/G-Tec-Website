@@ -14,6 +14,9 @@ const app = express();
 app.use(helmet());
 app.use(cors());
 app.use(express.json());
+// When running behind a proxy (Render, Cloudflare, etc.) enable trust proxy
+// so express-rate-limit can use X-Forwarded-For correctly.
+app.set('trust proxy', true);
 
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -67,13 +70,33 @@ const studentSchema = new mongoose.Schema({
 
 const Student = mongoose.model('Student', studentSchema);
 
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASSWORD
-  }
-});
+// Create transporter with a provider fallback. Prefer SendGrid (recommended for Render),
+// otherwise fall back to Gmail if credentials are present.
+let transporter;
+if (process.env.SENDGRID_API_KEY) {
+  transporter = nodemailer.createTransport({
+    host: 'smtp.sendgrid.net',
+    port: 587,
+    secure: false,
+    auth: {
+      user: 'apikey',
+      pass: process.env.SENDGRID_API_KEY
+    },
+    tls: { ciphers: 'TLSv1.2' },
+    connectionTimeout: 30000
+  });
+  console.log('Mailer: configured to use SendGrid SMTP');
+} else {
+  transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: EMAIL_USER,
+      pass: EMAIL_PASSWORD
+    },
+    connectionTimeout: 30000
+  });
+  console.log('Mailer: configured to use Gmail SMTP (fallback)');
+}
 
 transporter.verify((error, success) => {
   if (error) {
