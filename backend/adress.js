@@ -75,6 +75,14 @@ const transporter = nodemailer.createTransport({
   }
 });
 
+transporter.verify((error, success) => {
+  if (error) {
+    console.error('Nodemailer verification failed:', error);
+  } else {
+    console.log('Nodemailer ready to send messages');
+  }
+});
+
 const courseSchema = new mongoose.Schema({
   title: String,
   category: String, 
@@ -169,6 +177,7 @@ app.get('/api/states/:countryCode', (req, res) => {
 // 3. Get Districts (Cities) by State
 app.get('/api/cities/:countryCode/:stateCode', (req, res) => {
   const cities = City.getCitiesOfState(req.params.countryCode, req.params.stateCode).map(c => ({
+    id: c.name,
     name: c.name
   }));
   res.json(cities);
@@ -179,7 +188,7 @@ app.get('/api/districts/:countryCode/:stateCode', (req, res) => {
   
   // Use the library to get cities based on both country and state for accuracy
   const cities = City.getCitiesOfState(countryCode, stateCode).map(c => ({
-    id: c.name, // The library doesn't provide unique IDs for all cities, so we use the name
+    id: c.name,
     name: c.name
   }));
   
@@ -192,12 +201,12 @@ app.get('/api/subdistricts/:districtId', (req, res) => {
 
 app.get('/api/india/pincode/:pin', async (req, res) => {
   try {
-    const response = await axios.get(`https://api.postalpincode.in/pincode/${req.params.pin}`);
-    const data = response.data[0];
-    
+    const response = await axios.get(`http://www.postalpincode.in/api/pincode/${req.params.pin}`);
+    const data = response.data;
+
     if (data.Status === "Success") {
       const areas = data.PostOffice.map(po => ({
-        subDistrict: po.Block,
+        subDistrict: po.Taluk || po.Block,
         district: po.District,
         state: po.State,
         postName: po.Name
@@ -207,7 +216,8 @@ app.get('/api/india/pincode/:pin', async (req, res) => {
       res.status(404).json({ success: false, message: "Invalid Pincode" });
     }
   } catch (error) {
-    res.status(500).json({ success: false, message: "Server Error" });
+    console.error('Pincode lookup failed:', error.message || error);
+    res.status(500).json({ success: false, message: `Postal lookup service error: ${error.message || 'Unavailable'}` });
   }
 });
 

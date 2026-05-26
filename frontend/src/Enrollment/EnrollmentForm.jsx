@@ -120,9 +120,17 @@ export default function EnrollmentForm() {
   // --- Logic Handlers ---
   const handlePincodeEntry = async (e) => {
     const pin = e.target.value;
-    setSelection((prev) => ({ ...prev, pincode: pin }));
+    setSelection((prev) => ({
+      ...prev,
+      pincode: pin,
+    }));
 
-    if (selection.country?.id === "IN" && pin.length === 6) {
+    if (selection.country?.id !== "IN") {
+      // PIN lookup is only supported for India here.
+      return;
+    }
+
+    if (pin.length === 6) {
       try {
         const res = await fetch(`${API_BASE}/india/pincode/${pin}`);
         const result = await res.json();
@@ -135,17 +143,34 @@ export default function EnrollmentForm() {
             .map((name) => ({ id: name, name: name }));
 
           setSubDistricts(uniqueSubDistricts);
+
           const matchedState = states.find(
             (s) =>
               s.name.toLowerCase() === info.state.toLowerCase() ||
               s.name.toLowerCase().includes(info.state.toLowerCase()),
           );
 
+          const stateOption = matchedState
+            ? matchedState
+            : { id: info.state, name: info.state };
+
+          const districtOption = { id: info.district, name: info.district };
+          const updatedDistricts = districts.some((d) => d.id === districtOption.id)
+            ? districts
+            : [districtOption, ...districts];
+
+          setStates((prev) =>
+            prev.some((s) => s.id === stateOption.id)
+              ? prev
+              : [stateOption, ...prev],
+          );
+          setDistricts(updatedDistricts);
+
           setSelection((prev) => ({
             ...prev,
-            stateId: matchedState ? matchedState.id : "",
+            stateId: stateOption.id,
             stateName: info.state,
-            districtId: info.district,
+            districtId: districtOption.id,
             districtName: info.district,
             subDistrictId: uniqueSubDistricts[0]?.id || "",
             pincode: pin,
