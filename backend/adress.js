@@ -4,6 +4,7 @@ const { Country, State, City } = require('country-state-city');
 const axios = require('axios'); 
 const mongoose = require('mongoose');
 const adminAuthRoutes = require('./adminAuth');
+const { Resend } = require('resend'); // ✅ Resend Imported
 
 require('dotenv').config();
 
@@ -14,6 +15,7 @@ const app = express();
 app.use(helmet());
 app.use(cors());
 app.use(express.json());
+
 // When running behind a proxy (Render, Cloudflare, etc.) enable trust proxy
 // so express-rate-limit can use X-Forwarded-For correctly.
 app.set('trust proxy', true);
@@ -28,9 +30,11 @@ app.use('/api/', apiLimiter);
 
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/gtec_database';
 const BACKEND_URL = process.env.BACKEND_URL;
-const nodemailer = require('nodemailer');
-const EMAIL_USER=process.env.EMAIL_USER;
-const EMAIL_PASSWORD=process.env.EMAIL_PASSWORD;
+const EMAIL_USER = process.env.EMAIL_USER;
+
+// ✅ Initialize Resend
+const resend = new Resend(process.env.RESEND_API_KEY);
+const RESEND_FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev'; // Use your verified domain email here once added to Resend
 
 mongoose.connect(MONGO_URI)
   .then(() => {
@@ -69,42 +73,6 @@ const studentSchema = new mongoose.Schema({
 });
 
 const Student = mongoose.model('Student', studentSchema);
-
-// Create transporter with a provider fallback. Prefer SendGrid (recommended for Render),
-// otherwise fall back to Gmail if credentials are present.
-let transporter;
-if (process.env.SENDGRID_API_KEY) {
-  transporter = nodemailer.createTransport({
-    host: 'smtp.sendgrid.net',
-    port: 587,
-    secure: false,
-    auth: {
-      user: 'apikey',
-      pass: process.env.SENDGRID_API_KEY
-    },
-    tls: { ciphers: 'TLSv1.2' },
-    connectionTimeout: 30000
-  });
-  console.log('Mailer: configured to use SendGrid SMTP');
-} else {
-  transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-      user: EMAIL_USER,
-      pass: EMAIL_PASSWORD
-    },
-    connectionTimeout: 30000
-  });
-  console.log('Mailer: configured to use Gmail SMTP (fallback)');
-}
-
-transporter.verify((error, success) => {
-  if (error) {
-    console.error('Nodemailer verification failed:', error);
-  } else {
-    console.log('Nodemailer ready to send messages');
-  }
-});
 
 const courseSchema = new mongoose.Schema({
   title: String,
@@ -211,7 +179,7 @@ app.get('/api/districts/:countryCode/:stateCode', (req, res) => {
   
   // Use the library to get cities based on both country and state for accuracy
   const cities = City.getCitiesOfState(countryCode, stateCode).map(c => ({
-    id: c.name,
+    id: c.name, 
     name: c.name
   }));
   
@@ -246,7 +214,6 @@ app.get('/api/india/pincode/:pin', async (req, res) => {
 
 {/*---------- Course Category verification section ----------*/}
 
-// REPLACE your current POST route with this:
 app.post('/api/categories', async (req, res) => {
   try {
     const { name, slug, description, explorerDescription, headline, image } = req.body; 
@@ -425,26 +392,17 @@ app.post('/api/contact', async (req, res) => {
     });
     await newInquiry.save();
 
-    // B. Setup Nodemailer
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: EMAIL_USER, 
-        pass: EMAIL_PASSWORD  
-      }
-    });
-
     const formattedPhone = `${countryCode} ${phone}`;
     
     // ⚠️ IMPORTANT: Change this to your live server URL once deployed!
-    // E.g., 'https://api.yourdomain.com'
     const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:5000'; 
     const trackingPixelUrl = `${BACKEND_URL}/api/contact-inquiries/${newInquiry._id}/track-read`;
 
-    const mailOptions = {
-      from: `"G-TEC Portal" <${EMAIL_USER}>`, 
-      replyTo: email, 
-      to: EMAIL_USER,
+    // C. Send Email with Resend API
+    const { data, error } = await resend.emails.send({
+      from: `"G-TEC Portal" <${RESEND_FROM_EMAIL}>`,
+      to: [EMAIL_USER], 
+      reply_to: email,
       subject: `🔔 New Lead: ${firstName} ${lastName}`,
       html: `
         <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f9fafb; padding: 40px 20px; border-radius: 12px;">
@@ -493,23 +451,18 @@ app.post('/api/contact', async (req, res) => {
 
         <img src="${trackingPixelUrl}" width="1" height="1" style="display:none;" alt="" />
       `
-    };
+    });
 
-    // C. Verify transporter and Send Email (surface errors for deployment debugging)
-    try {
-      await transporter.verify();
-      await transporter.sendMail(mailOptions);
-      res.status(200).json({ success: true, message: 'Inquiry securely saved and email dispatched.' });
-    } catch (mailErr) {
-      console.error('Contact Email Send Error:', mailErr && (mailErr.stack || mailErr));
-      const mailMsg = (mailErr && (mailErr.message || (mailErr.response && mailErr.response.message))) || 'Failed to send contact email';
-      return res.status(500).json({ success: false, message: mailMsg });
+    if (error) {
+      console.error('Contact Email Send Error:', error);
+      return res.status(500).json({ success: false, message: 'Saved to DB, but email failed' });
     }
 
+    res.status(200).json({ success: true, message: 'Inquiry securely saved and email dispatched.' });
+
   } catch (error) {
-    console.error('Contact Submission Error:', error && (error.stack || error));
-    const errMsg = (error && (error.message || (error.response && error.response.message))) || 'Failed to process the inquiry.';
-    res.status(500).json({ success: false, message: errMsg });
+    console.error('Contact Submission Error:', error);
+    res.status(500).json({ success: false, message: 'Failed to process the inquiry.' });
   }
 });
 
@@ -591,9 +544,9 @@ app.post('/api/enroll', async (req, res) => {
 
     // Send the "Celebratory" Welcome Email
     if (newStudent.email) {
-      const mailOptions = {
-        from: `"G-TEC Education Nagercoil" <${process.env.EMAIL_USER}>`,
-        to: newStudent.email,
+      const { data, error } = await resend.emails.send({
+        from: `"G-TEC Education Nagercoil" <${RESEND_FROM_EMAIL}>`,
+        to: [newStudent.email],
         subject: '🎉 Enrollment Confirmed! Welcome to G-TEC Nagercoil',
         html: `
           <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
@@ -656,12 +609,13 @@ app.post('/api/enroll', async (req, res) => {
 
           </div>
         `
-      };
-
-      transporter.sendMail(mailOptions, (error, info) => {
-        if (error) console.error("❌ Email Error:", error);
-        else console.log("✅ Welcome Email sent to:", newStudent.email);
       });
+
+      if (error) {
+        console.error("❌ Email Error:", error);
+      } else {
+        console.log("✅ Welcome Email sent to:", newStudent.email);
+      }
     }
 
     res.json({ success: true, message: "Student enrolled & Email sent successfully!" });
@@ -682,11 +636,11 @@ app.post('/api/students/bulk-email', async (req, res) => {
       return res.status(400).json({ success: false, error: "None of the selected students have a valid email address." });
     }
 
-    // 2. Prepare and send emails in parallel
+    // 2. Prepare and send emails in parallel using Resend
     const emailPromises = studentsWithEmail.map(student => {
-      const mailOptions = {
-        from: `"G-TEC Education Nagercoil" <${process.env.EMAIL_USER}>`,
-        to: student.email,
+      return resend.emails.send({
+        from: `"G-TEC Education Nagercoil" <${RESEND_FROM_EMAIL}>`,
+        to: [student.email],
         subject: '⚠️ Important Update: G-TEC Nagercoil',
         html: `
           <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f3f4f6; padding: 20px; border-radius: 8px;">
@@ -733,12 +687,17 @@ app.post('/api/students/bulk-email', async (req, res) => {
 
         </div>
         `
-      };
-      return transporter.sendMail(mailOptions);
+      });
     });
 
-    await Promise.all(emailPromises);
+    const results = await Promise.all(emailPromises);
     
+    // Check for errors in the returned Resend promises
+    const failedEmails = results.filter(r => r.error);
+    if (failedEmails.length > 0) {
+      console.error(`[BULK EMAIL] ${failedEmails.length} emails failed to send.`);
+    }
+
     console.log(`[BULK EMAIL] Successfully sent ${studentsWithEmail.length} emails.`);
     res.json({ 
       success: true, 
@@ -758,9 +717,9 @@ app.post('/api/students/:id/send-email', async (req, res) => {
     if(!student) return res.status(404).json({ error: "Student not found" });
     if(!student.email) return res.status(400).json({ error: "Student has no email address" });
 
-    const mailOptions = {
-      from: `"G-TEC Education" <${process.env.EMAIL_USER}>`,
-      to: student.email,
+    const { data, error } = await resend.emails.send({
+      from: `"G-TEC Education" <${RESEND_FROM_EMAIL}>`,
+      to: [student.email],
       subject: 'Update regarding your G-TEC Course',
       html: `
         <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f3f4f6; padding: 20px; border-radius: 8px;">
@@ -807,15 +766,18 @@ app.post('/api/students/:id/send-email', async (req, res) => {
 
         </div>
       `
-    };
+    });
 
-    await transporter.sendMail(mailOptions);
+    if (error) {
+      console.error("❌ Email Error:", error);
+      return res.status(500).json({ success: false, error: "Failed to send Email" });
+    }
+
     console.log(`[EMAIL SYSTEM] Sent to ${student.email}`);
     res.json({ success: true, message: "Email sent successfully!" });
 
   } catch (err) {
     console.error("Email Error:", err && (err.stack || err));
-    // Return the underlying error message where safe to help debugging in production logs
     const errMsg = (err && (err.message || (err.response && err.response.message))) || 'Failed to send Email';
     res.status(500).json({ success: false, error: errMsg });
   }
@@ -844,4 +806,5 @@ app.delete('/api/students/:id', async (req, res) => {
   }
 });
 
-app.listen(5000, () => console.log('Professional Geo-Server running on 5000'));
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`Professional Geo-Server running on ${PORT}`));
