@@ -554,6 +554,22 @@ app.get('/api/students/all', async (req, res) => {
 
 app.post('/api/enroll', async (req, res) => {
   try {
+    const { phone, course } = req.body;
+
+    // 🛡️ DUPLICATE SHIELD: Check if student exists in this course and is not archived
+    const checkDuplicate = await Student.findOne({ 
+      phone, 
+      course,
+      isArchived: { $ne: true } 
+    });
+
+    if (checkDuplicate) {
+      return res.status(400).json({ 
+        success: false, 
+        error: "You are already enrolled in this course!" 
+      });
+    }
+
     const newStudent = new Student(req.body);
     await newStudent.save();
 
