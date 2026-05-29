@@ -24,6 +24,9 @@ export default function EnrollmentForm() {
   type: "success",
   message: "",
 });
+  // ✅ ADDED: Prevent double clicks
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const location = useLocation();
 
   const { View: LottieAnimation } = useLottie({
@@ -184,6 +187,7 @@ export default function EnrollmentForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isSubmitting) return; // ✅ Block double clicks
 
     const requiredFields = [
       "name",
@@ -227,6 +231,8 @@ export default function EnrollmentForm() {
       subDistrict: selection.subDistrictId || "",
     };
 
+    setIsSubmitting(true); // ✅ Set loading to true
+
     try {
       const response = await fetch(`${API_BASE}/enroll`, {
         method: "POST",
@@ -240,7 +246,8 @@ export default function EnrollmentForm() {
         setModalState({
           isOpen: true,
           type: "success",
-          message: "Registration Successful! Please check your email for confirmation."
+          // ✅ REMOVED the "check your email" text
+          message: "Registration Successful!"
         });
         
         // Reset the form
@@ -271,7 +278,7 @@ export default function EnrollmentForm() {
         setModalState({
           isOpen: true,
           type: "error",
-          message: "Submission failed: " + (result.message || "Please try again.")
+          message: "Submission failed: " + (result.message || result.error || "Please try again.")
         });
       }
     } catch (error) {
@@ -281,6 +288,8 @@ export default function EnrollmentForm() {
         type: "error",
         message: "Connection error: Is your backend running?"
       });
+    } finally {
+      setIsSubmitting(false); // ✅ Re-enable the button
     }
   };
 
@@ -711,10 +720,13 @@ export default function EnrollmentForm() {
                   />
                 </div>
               </div>
+              
+              {/* Email field kept exactly as provided */}
               <div className="col-span-1">
-      <label className={labelClass}><Mail size={12}/> Email Address</label>
-      <input type="email" required className={inputClass} placeholder="student@gmail.com" value={selection.email} onChange={(e) => setSelection({...selection, email: e.target.value})} />
-    </div>
+                <label className={labelClass}><Mail size={12}/> Email Address</label>
+                <input type="email" required className={inputClass} placeholder="student@gmail.com" value={selection.email} onChange={(e) => setSelection({...selection, email: e.target.value})} />
+              </div>
+
             </div>
 
             {/* 6. Location Details */}
@@ -802,14 +814,15 @@ export default function EnrollmentForm() {
               </div>
             </div>
 
+            {/* ✅ ADDED: Disabled state and dynamic text for button */}
             <button
               type="submit"
-              className="w-full py-3.5 mt-2 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-all shadow-md shadow-blue-600/20 flex items-center justify-center gap-2 group">
-              Complete Enrollment{" "}
-              <ChevronRight
-                size={18}
-                className="group-hover:translate-x-1 transition-transform"
-              />
+              disabled={isSubmitting}
+              className={`w-full py-3.5 mt-2 bg-blue-600 text-white rounded-xl font-bold transition-all shadow-md flex items-center justify-center gap-2 group 
+                ${isSubmitting ? "opacity-70 cursor-not-allowed" : "hover:bg-blue-700 shadow-blue-600/20"}`}
+            >
+              {isSubmitting ? "Enrolling..." : "Complete Enrollment"}
+              {!isSubmitting && <ChevronRight size={18} className="group-hover:translate-x-1 transition-transform" />}
             </button>
           </form>
         </div>
