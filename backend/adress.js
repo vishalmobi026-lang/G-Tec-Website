@@ -4,7 +4,6 @@ const { Country, State, City } = require('country-state-city');
 const axios = require('axios'); 
 const mongoose = require('mongoose');
 const adminAuthRoutes = require('./adminAuth');
-const nodemailer = require('nodemailer'); // ✅ Nodemailer Imported
 
 require('dotenv').config();
 
@@ -16,8 +15,7 @@ app.use(helmet());
 app.use(cors());
 app.use(express.json());
 
-// When running behind a proxy (Render, Cloudflare, etc.) enable trust proxy
-// so express-rate-limit can use X-Forwarded-For correctly.
+
 app.set('trust proxy', true);
 
 const apiLimiter = rateLimit({
@@ -30,29 +28,6 @@ app.use('/api/', apiLimiter);
 
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/gtec_database';
 const BACKEND_URL = process.env.BACKEND_URL;
-const EMAIL_USER = process.env.EMAIL_USER;
-const EMAIL_PASSWORD = process.env.EMAIL_PASSWORD;
-
-// ✅ Initialize Nodemailer Transporter with Gmail (Port 465 is best for Render)
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  host: 'smtp.gmail.com',
-  port: 465,
-  secure: true, 
-  auth: {
-    user: EMAIL_USER,
-    pass: EMAIL_PASSWORD,
-  },
-});
-
-// Verify the connection on startup
-transporter.verify((error, success) => {
-  if (error) {
-    console.error('❌ Nodemailer connection failed:', error.message);
-  } else {
-    console.log('✅ Nodemailer is ready to send emails');
-  }
-});
 
 mongoose.connect(MONGO_URI)
   .then(() => {
@@ -373,33 +348,21 @@ app.get('/api/gamescores/all', async (req, res) => {
   }
 });
 
-{/*------------------ MailSection ---------------*/}
 
-// ✅ 1. TRACKING PIXEL ROUTE (Marks inquiry as 'Read' when email is opened)
-app.get('/api/contact-inquiries/:id/track-read', async (req, res) => {
-  try {
-    // Update the database status to 'Read'
-    await ContactInquiry.findByIdAndUpdate(req.params.id, { status: 'Read' });
-    
-    // Return a 1x1 transparent GIF so the email doesn't show a broken image box
-    const transparentGif = Buffer.from('R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7', 'base64');
-    res.writeHead(200, {
-      'Content-Type': 'image/gif',
-      'Content-Length': transparentGif.length
-    });
-    res.end(transparentGif);
-  } catch (err) {
-    console.error("Tracking Pixel Error:", err);
-    res.status(500).send('Error');
-  }
-});
+{/*------------------ Contact Section ---------------*/}
 
-// ✅ 2. NEW CONTACT POST ROUTE (Saves to DB & Sends Tracked Email)
+// ✅ NEW CONTACT POST ROUTE (Saves to DB ONLY)
 app.post('/api/contact', async (req, res) => {
   const { firstName, lastName, email, countryCode, phone, message } = req.body;
 
   try {
-    // A. Save to Database first to generate the _id
+    // 🛡️ DUPLICATE PREVENTION: Check if this exact message was sent recently
+    const duplicate = await ContactInquiry.findOne({ email, message });
+    if (duplicate) {
+      return res.status(200).json({ success: true, message: 'We already received this message. We will contact you soon!' });
+    }
+
+    // Save to Database
     const newInquiry = new ContactInquiry({
       firstName,
       lastName,
@@ -408,80 +371,18 @@ app.post('/api/contact', async (req, res) => {
       phone,
       message
     });
+    
     await newInquiry.save();
 
-    const formattedPhone = `${countryCode} ${phone}`;
-    
-    // ⚠️ IMPORTANT: Change this to your live server URL once deployed!
-    const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:5000'; 
-    const trackingPixelUrl = `${BACKEND_URL}/api/contact-inquiries/${newInquiry._id}/track-read`;
-
-    // C. Send Email with Nodemailer
-    const mailOptions = {
-      from: `"G-TEC Portal" <${EMAIL_USER}>`,
-      to: EMAIL_USER, 
-      replyTo: email,
-      subject: `🔔 New Lead: ${firstName} ${lastName}`,
-      html: `
-        <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f9fafb; padding: 40px 20px; border-radius: 12px;">
-          <div style="background-color: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border-top: 4px solid #2563eb;">
-            
-            <h2 style="margin-top: 0; color: #111827; font-size: 24px;">New Student Inquiry</h2>
-            <p style="color: #4b5563; font-size: 16px; line-height: 1.5;">You have received a new contact request from the website. The details have been securely logged in your database.</p>
-            
-            <div style="background-color: #f3f4f6; border-radius: 6px; padding: 20px; margin: 25px 0;">
-              <table style="width: 100%; border-collapse: collapse;">
-                <tr>
-                  <td style="padding: 8px 0; color: #6b7280; font-weight: 600; width: 100px;">Name:</td>
-                  <td style="padding: 8px 0; color: #111827; font-weight: bold;">${firstName} ${lastName}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px 0; color: #6b7280; font-weight: 600;">Email:</td>
-                  <td style="padding: 8px 0; font-weight: bold;">
-                    <a href="mailto:${email}" style="color: #2563eb; text-decoration: none;">${email}</a>
-                  </td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px 0; color: #6b7280; font-weight: 600;">Phone:</td>
-                  <td style="padding: 8px 0; font-weight: bold;">
-                    <a href="tel:${formattedPhone.replace(/\s+/g, '')}" style="color: #111827; text-decoration: none;">${formattedPhone}</a>
-                  </td>
-                </tr>
-              </table>
-            </div>
-
-            <h3 style="color: #374151; font-size: 16px; margin-bottom: 10px;">Student's Message:</h3>
-            <div style="background-color: #ffffff; border-left: 4px solid #e5e7eb; padding: 15px 20px; margin-bottom: 20px; color: #4b5563; font-style: italic; line-height: 1.6;">
-              "${message}"
-            </div>
-
-            <div style="text-align: center; margin-top: 30px;">
-              <a href="mailto:${email}" style="background-color: #2563eb; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 600; display: inline-block;">Reply to Student</a>
-            </div>
-
-          </div>
-          
-          <div style="text-align: center; margin-top: 20px; color: #9ca3af; font-size: 12px;">
-            <p>This is an automated alert from the G-TEC Database System.</p>
-            <p>Logged at: ${new Date().toLocaleString()}</p>
-          </div>
-        </div>
-
-        <img src="${trackingPixelUrl}" width="1" height="1" style="display:none;" alt="" />
-      `
-    };
-
-    await transporter.sendMail(mailOptions);
-    res.status(200).json({ success: true, message: 'Inquiry securely saved and email dispatched.' });
+    res.status(200).json({ success: true, message: 'Inquiry securely saved.' });
 
   } catch (error) {
     console.error('Contact Submission Error:', error);
-    // Continue responding success so the UI moves forward gracefully if email fails but DB succeeds
-    res.status(500).json({ success: false, message: 'Saved to DB, but failed to process the email alert.' });
+    res.status(500).json({ success: false, message: 'Failed to process the inquiry.' });
   }
 });
 
-// ✅ 3. GET ROUTE (Fetch all inquiries for Admin Dashboard)
+// ✅ GET ROUTE (Fetch all inquiries for Admin Dashboard)
 app.get('/api/contact-inquiries', async (req, res) => {
   try {
     const inquiries = await ContactInquiry.find().sort({ createdAt: -1 });
@@ -573,247 +474,20 @@ app.post('/api/enroll', async (req, res) => {
     const newStudent = new Student(req.body);
     await newStudent.save();
 
-    // Send the "Celebratory" Welcome Email
-    if (newStudent.email) {
-      const mailOptions = {
-        from: `"G-TEC Education Nagercoil" <${EMAIL_USER}>`,
-        to: newStudent.email,
-        subject: '🎉 Enrollment Confirmed! Welcome to G-TEC Nagercoil',
-        html: `
-          <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
-            
-            <div style="background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%); padding: 40px 20px; text-align: center; color: white;">
-              <img src="https://www.gteceducation.com/assets/img/favicon/favicon-32x32.png" alt="G-TEC Education" style="max-height: 60px; margin-bottom: 20px; border-radius: 4px;" />
-              <h1 style="margin: 0; font-size: 28px; font-weight: bold; letter-spacing: 1px;">Welcome to the Family!</h1>
-              <p style="margin: 10px 0 0 0; font-size: 16px; opacity: 0.9;">Your tech journey starts right here.</p>
-            </div>
-
-            <div style="padding: 35px 30px;">
-              <p style="font-size: 18px; color: #1f2937; margin-top: 0;">Hi <strong>${newStudent.name}</strong>,</p>
-              
-              <p style="font-size: 16px; color: #4b5563; line-height: 1.6;">
-                Congratulations! You have successfully secured your spot in the <strong style="color: #2563eb;">${newStudent.course}</strong> program at G-TEC Education. We are absolutely thrilled to help you build your future.
-              </p>
-
-              <div style="background-color: #eff6ff; border-left: 4px solid #2563eb; padding: 18px 20px; margin: 30px 0; border-radius: 0 8px 8px 0;">
-                <h3 style="margin: 0 0 12px 0; color: #1e3a8a; font-size: 16px;">📌 What happens next?</h3>
-                <ul style="margin: 0; padding-left: 20px; color: #4b5563; font-size: 15px; line-height: 1.6;">
-                  <li style="margin-bottom: 6px;">Our academic counselor will review your profile.</li>
-                  <li style="margin-bottom: 6px;">We will call you shortly to finalize your batch timings.</li>
-                  <li>You will receive your schedule and get ready to learn!</li>
-                </ul>
-              </div>
-
-              <p style="font-size: 16px; color: #4b5563; line-height: 1.6;">
-                If you are eager to start or have any immediate questions, don't hesitate to reach out to our team right away.
-              </p>
-
-              <div style="text-align: center; margin: 35px 0;">
-                <a href="tel:+919486188648" style="background-color: #ffffff; color: #2563eb; border: 2px solid #2563eb; text-decoration: none; padding: 12px 30px; border-radius: 50px; font-weight: bold; display: inline-block; font-size: 16px; text-transform: uppercase; letter-spacing: 0.5px;">
-                  📞 Call Support
-                </a>
-              </div>
-              
-              <p style="font-size: 16px; color: #374151; margin-bottom: 0;">
-                Warmly,<br/>
-                <strong style="color: #1e3a8a; font-size: 18px;">The G-TEC Team</strong>
-              </p>
-            </div>
-
-            <div style="background-color: #f9fafb; padding: 25px 30px; text-align: center; border-top: 1px solid #e5e7eb;">
-              <h4 style="margin: 0 0 10px 0; color: #374151; font-size: 15px;">G-TEC Education Nagercoil</h4>
-              <p style="margin: 5px 0; color: #6b7280; font-size: 13px; line-height: 1.5;">
-                Upstair, Tower Jn, Sivaraj Building 2nd Floor, Rose Centre<br/>
-                Nagercoil, Tamil Nadu 629001
-              </p>
-              
-              <div style="margin: 15px 0; border-top: 1px dashed #d1d5db; width: 50%; margin-left: auto; margin-right: auto;"></div>
-              
-              <p style="margin: 5px 0; color: #6b7280; font-size: 13px;">
-                <a href="tel:+919486188648" style="color: #2563eb; text-decoration: none; font-weight: 500;">+91 94861 88648</a> <span style="color: #d1d5db; margin: 0 5px;">|</span> 
-                <a href="tel:+917200286091" style="color: #2563eb; text-decoration: none; font-weight: 500;">+91 72002 86091</a>
-              </p>
-              <p style="margin: 5px 0; color: #6b7280; font-size: 13px;">
-                <a href="mailto:infozenxit@gmail.com" style="color: #2563eb; text-decoration: none; font-weight: 500;">infozenxit@gmail.com</a>
-              </p>
-            </div>
-
-          </div>
-        `
-      };
-
-      try {
-        await transporter.sendMail(mailOptions);
-        console.log("✅ Welcome Email sent to:", newStudent.email);
-      } catch (error) {
-        console.error("❌ Email Error:", error.message);
-      }
-    }
-
-    res.json({ success: true, message: "Student enrolled & Email sent successfully!" });
+    res.json({ success: true, message: "Student enrolled successfully!" });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
 });
 
+// Dummy endpoint so frontend doesn't crash if buttons are pressed
 app.post('/api/students/bulk-email', async (req, res) => {
-  const { studentIds } = req.body;
-  
-  try {
-    // 1. Fetch all selected students from DB
-    const students = await Student.find({ _id: { $in: studentIds } });
-    const studentsWithEmail = students.filter(s => s.email && s.email.trim() !== "");
-
-    if (studentsWithEmail.length === 0) {
-      return res.status(400).json({ success: false, error: "None of the selected students have a valid email address." });
-    }
-
-    // 2. Prepare and send emails in parallel using Nodemailer
-    const emailPromises = studentsWithEmail.map(student => {
-      const mailOptions = {
-        from: `"G-TEC Education Nagercoil" <${EMAIL_USER}>`,
-        to: student.email,
-        subject: '⚠️ Important Update: G-TEC Nagercoil',
-        html: `
-          <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f3f4f6; padding: 20px; border-radius: 8px;">
-          
-          <div style="text-align: center; padding-bottom: 20px;">
-            <img src="https://www.gteceducation.com/assets/img/favicon/favicon-32x32.png" alt="G-TEC Education" style="max-height: 60px; margin-bottom: 10px;" />
-            <h2 style="color: #1e3a8a; margin: 0; font-size: 24px; letter-spacing: 0.5px;">G-TEC Education Nagercoil</h2>
-          </div>
-
-          <div style="background-color: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border-top: 4px solid #2563eb;">
-            <p style="font-size: 16px; color: #374151; margin-top: 0;">Hello <strong style="color: #111827;">${student.name}</strong>,</p>
-            
-            <p style="font-size: 16px; color: #4b5563; line-height: 1.6;">
-              This is a quick reminder from G-TEC Nagercoil regarding your <strong style="color: #2563eb;">${student.course}</strong> course.
-            </p>
-            
-            <p style="font-size: 16px; color: #4b5563; line-height: 1.6;">
-              Please contact the office at your earliest convenience to discuss your course progress, batch timings, or any pending updates.
-            </p>
-
-            <div style="text-align: center; margin: 35px 0;">
-              <a href="tel:+919486188648" style="background-color: #2563eb; color: #ffffff; text-decoration: none; padding: 14px 28px; border-radius: 6px; font-weight: bold; display: inline-block; font-size: 16px;">
-                Contact Office Now
-              </a>
-            </div>
-            
-            <p style="font-size: 16px; color: #374151; margin-bottom: 0;">
-              Best Regards,<br/>
-              <strong style="color: #1e3a8a; font-size: 18px;">G-TEC Team</strong>
-            </p>
-          </div>
-
-          <div style="text-align: center; margin-top: 25px; color: #6b7280; font-size: 13px; line-height: 1.6;">
-            <p style="margin: 0; font-weight: bold; color: #4b5563;">G-TEC Education Nagercoil</p>
-            <p style="margin: 5px 0;">Upstair, Tower Jn, Sivaraj Building 2nd Floor, Rose Centre, Nagercoil, Tamil Nadu 629001</p>
-            <p style="margin: 5px 0;">
-              <strong>Phone:</strong> +91 94861 88648, +91 72002 86091<br/>
-              <strong>Email:</strong> infozenxit@gmail.com
-            </p>
-            <p style="margin: 15px 0 0 0; font-size: 12px; color: #9ca3af;">
-              © ${new Date().getFullYear()} G-TEC Education. All rights reserved.
-            </p>
-          </div>
-
-        </div>
-        `
-      };
-      
-      // Return a promise that resolves with success status
-      return transporter.sendMail(mailOptions)
-        .then(info => ({ success: true, info }))
-        .catch(error => ({ success: false, error }));
-    });
-
-    const results = await Promise.all(emailPromises);
-    
-    // Check for errors in the returned promises
-    const failedEmails = results.filter(r => !r.success);
-    if (failedEmails.length > 0) {
-      console.error(`[BULK EMAIL] ${failedEmails.length} emails failed to send.`);
-    }
-
-    console.log(`[BULK EMAIL] Successfully sent ${studentsWithEmail.length - failedEmails.length} emails.`);
-    res.json({ 
-      success: true, 
-      message: `Successfully sent emails to ${studentsWithEmail.length - failedEmails.length} students.` 
-    });
-
-  } catch (err) {
-    console.error("Bulk Email Error:", err);
-    res.status(500).json({ success: false, error: "Server error while sending bulk emails." });
-  }
+  res.json({ success: true, message: "Mail service is disabled. No action taken." });
 });
 
-// ✅ API to MANUALLY SEND SMS (Triggered by Admin Panel Button)
+// Dummy endpoint so frontend doesn't crash if buttons are pressed
 app.post('/api/students/:id/send-email', async (req, res) => {
-  try {
-    const student = await Student.findById(req.params.id);
-    if(!student) return res.status(404).json({ error: "Student not found" });
-    if(!student.email) return res.status(400).json({ error: "Student has no email address" });
-
-    const mailOptions = {
-      from: `"G-TEC Education" <${EMAIL_USER}>`,
-      to: student.email,
-      subject: 'Update regarding your G-TEC Course',
-      html: `
-        <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f3f4f6; padding: 20px; border-radius: 8px;">
-          
-          <div style="text-align: center; padding-bottom: 20px;">
-            <img src="https://www.gteceducation.com/assets/img/favicon/favicon-32x32.png" alt="G-TEC Education" style="max-height: 60px; margin-bottom: 10px;" />
-            <h2 style="color: #1e3a8a; margin: 0; font-size: 24px; letter-spacing: 0.5px;">G-TEC Education Nagercoil</h2>
-          </div>
-
-          <div style="background-color: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border-top: 4px solid #2563eb;">
-            <p style="font-size: 16px; color: #374151; margin-top: 0;">Hello <strong style="color: #111827;">${student.name}</strong>,</p>
-            
-            <p style="font-size: 16px; color: #4b5563; line-height: 1.6;">
-              This is a quick reminder from G-TEC Nagercoil regarding your <strong style="color: #2563eb;">${student.course}</strong> course.
-            </p>
-            
-            <p style="font-size: 16px; color: #4b5563; line-height: 1.6;">
-              Please contact the office at your earliest convenience to discuss your course progress, batch timings, or any pending updates.
-            </p>
-
-            <div style="text-align: center; margin: 35px 0;">
-              <a href="tel:+919486188648" style="background-color: #2563eb; color: #ffffff; text-decoration: none; padding: 14px 28px; border-radius: 6px; font-weight: bold; display: inline-block; font-size: 16px;">
-                Contact Office Now
-              </a>
-            </div>
-            
-            <p style="font-size: 16px; color: #374151; margin-bottom: 0;">
-              Best Regards,<br/>
-              <strong style="color: #1e3a8a; font-size: 18px;">G-TEC Team</strong>
-            </p>
-          </div>
-
-          <div style="text-align: center; margin-top: 25px; color: #6b7280; font-size: 13px; line-height: 1.6;">
-            <p style="margin: 0; font-weight: bold; color: #4b5563;">G-TEC Education Nagercoil</p>
-            <p style="margin: 5px 0;">Upstair, Tower Jn, Sivaraj Building 2nd Floor, Rose Centre, Nagercoil, Tamil Nadu 629001</p>
-            <p style="margin: 5px 0;">
-              <strong>Phone:</strong> +91 94861 88648, +91 72002 86091<br/>
-              <strong>Email:</strong> infozenxit@gmail.com
-            </p>
-            <p style="margin: 15px 0 0 0; font-size: 12px; color: #9ca3af;">
-              © ${new Date().getFullYear()} G-TEC Education. All rights reserved.
-            </p>
-          </div>
-
-        </div>
-      `
-    };
-
-    await transporter.sendMail(mailOptions);
-    console.log(`[EMAIL SYSTEM] Sent to ${student.email}`);
-    res.json({ success: true, message: "Email sent successfully!" });
-
-  } catch (err) {
-    console.error("Email Error:", err && (err.stack || err));
-    const errMsg = (err && (err.message || (err.response && err.response.message))) || 'Failed to send Email';
-    res.status(500).json({ success: false, error: errMsg });
-  }
+  res.json({ success: true, message: "Mail service is disabled. No action taken." });
 });
 
 // ✅ API to UPDATE an existing student
