@@ -62,7 +62,8 @@ const studentSchema = new mongoose.Schema({
   subDistrict: String,
   pincode: String,
   isArchived: { type: Boolean, default: false },
-  enrollmentDate: { type: Date, default: Date.now }
+  enrollmentDate: { type: Date, default: Date.now },
+  notes: { type: [String], default: [] }
 });
 
 const Student = mongoose.model('Student', studentSchema);
