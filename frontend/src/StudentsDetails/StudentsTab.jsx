@@ -628,26 +628,50 @@ export default function StudentsTab() {
                         }
                         className="w-full p-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-blue-500">
                         <option value="">Select...</option>
-                        <option value="pursuing">Pursuing</option>
-                        <option value="completed">Completed</option>
+                        <option value="Pursuing">Pursuing</option>
+                        <option value="Passed Out">Passed Out</option>
                       </select>
                     </div>
-                    <div>
-                      <label className="text-xs font-bold text-gray-500 mb-1 block">
-                        Pass Out Year
-                      </label>
-                      <input
-                        type="text"
-                        value={editingStudent.passOutYear || ""}
-                        onChange={(e) =>
-                          setEditingStudent({
-                            ...editingStudent,
-                            passOutYear: e.target.value,
-                          })
-                        }
-                        className="w-full p-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-blue-500"
-                      />
-                    </div>
+                    {editingStudent.educationStatus === "Passed Out" && (
+                      <div>
+                        <label className="text-xs font-bold text-gray-500 mb-1 block">
+                          Pass Out Year
+                        </label>
+                        <input
+                          type="text"
+                          value={editingStudent.passOutYear || ""}
+                          onChange={(e) =>
+                            setEditingStudent({
+                              ...editingStudent,
+                              passOutYear: e.target.value,
+                            })
+                          }
+                          className="w-full p-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-blue-500"
+                        />
+                      </div>
+                    )}
+                    {editingStudent.educationStatus === "Pursuing" && (
+                      <div>
+                        <label className="text-xs font-bold text-gray-500 mb-1 block">
+                          Current Year
+                        </label>
+                        <select
+                          value={editingStudent.currentYear || ""}
+                          onChange={(e) =>
+                            setEditingStudent({
+                              ...editingStudent,
+                              currentYear: e.target.value,
+                            })
+                          }
+                          className="w-full p-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-blue-500">
+                          <option value="">Select...</option>
+                          <option value="First Year">1st Year</option>
+                          <option value="Second Year">2nd Year</option>
+                          <option value="Third Year">3rd Year</option>
+                          <option value="Fourth Year">4th Year</option>
+                        </select>
+                      </div>
+                    )}
                   </div>
                 </div>
 
