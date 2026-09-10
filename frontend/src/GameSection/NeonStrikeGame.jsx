@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { API_BASE_URL } from "../api";
 import { motion, AnimatePresence } from "framer-motion";
 import LottieBase from "lottie-react"; 
 import gaming from "../assets/Rocket.json"; 
@@ -116,7 +117,7 @@ export default function NeonStrikeGame() {
   const gameLoopRef = useRef(null);
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/countries")
+    fetch(`${API_BASE_URL}/api/countries`)
       .then((res) => res.json())
       .then((data) => setCountries(data))
       .catch((err) => console.error("Failed to fetch countries:", err));
@@ -332,7 +333,7 @@ export default function NeonStrikeGame() {
 
     const fullPhoneNumber = `${formData.countryCode}${formData.phone}`;
     try {
-      await fetch("http://localhost:5000/api/gamescores/add", {
+      await fetch(`${API_BASE_URL}/api/gamescores/add`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: formData.name, phone: fullPhoneNumber, course: formData.course, score: finalScore, couponCode: code })

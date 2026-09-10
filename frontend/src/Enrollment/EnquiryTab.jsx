@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_BASE_URL } from "../api";
 import { Search, Trash2, Mail, Phone, User, Calendar, MessageSquare } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -10,7 +11,7 @@ export default function EnquiryTab() {
   // Fetch inquiries from the database
   const fetchInquiries = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/inquiries');
+      const response = await fetch(`${API_BASE_URL}/api/inquiries`);
       const data = await response.json();
       setInquiries(data);
       setLoading(false);
@@ -28,7 +29,7 @@ export default function EnquiryTab() {
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this inquiry?")) {
       try {
-        const response = await fetch(`http://localhost:5000/api/inquiries/${id}`, {
+        const response = await fetch(`${API_BASE_URL}/api/inquiries/${id}`, {
           method: 'DELETE'
         });
         if (response.ok) {

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { API_BASE_URL } from "../api";
 import { 
   Search, 
   Phone, 
@@ -20,7 +21,7 @@ export default function StudentsEnrollment() {
 
   // Fetch all students
   const fetchStudents = () => {
-    fetch("http://localhost:5000/api/students/all")
+    fetch(`${API_BASE_URL}/api/students/all`)
       .then((res) => res.json())
       .then((data) => {
         setStudents(data);
@@ -42,7 +43,7 @@ export default function StudentsEnrollment() {
     if (!confirmRestore) return;
 
     try {
-      const res = await fetch(`http://localhost:5000/api/students/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/students/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ isArchived: false }),

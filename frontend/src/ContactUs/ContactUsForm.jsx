@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { API_BASE_URL } from "../api";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLottie } from "lottie-react";
 import { Phone, Mail, MapPin } from "lucide-react";
@@ -30,7 +31,7 @@ const [countries, setCountries] = useState([]);
   useEffect(() => {
     const fetchCountries = async () => {
       try {
-        const response = await fetch("http://localhost:5000/api/countries"); 
+        const response = await fetch(`${API_BASE_URL}/api/countries`);
         const data = await response.json();
         
         if (data && data.length > 0) {
@@ -76,7 +77,7 @@ const [countries, setCountries] = useState([]);
   setStatusMessage("");
 
   try {
-    const response = await fetch("http://localhost:5000/api/contact", {
+    const response = await fetch(`${API_BASE_URL}/api/contact`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

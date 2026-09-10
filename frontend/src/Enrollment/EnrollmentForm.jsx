@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { API_BASE } from "../api";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLocation } from "react-router-dom";
 import { useLottie } from "lottie-react";
@@ -62,8 +63,6 @@ export default function EnrollmentForm() {
     subDistrictId: "",
     pincode: "",
   });
-
-  const API_BASE = "http://localhost:5000/api";
 
   // --- API UseEffects ---
   useEffect(() => {

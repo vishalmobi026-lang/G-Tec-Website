@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate, useLocation } from "react-router-dom";
+import { API_BASE_URL } from "../api";
 import {
   ArrowRight,
   Clock,
@@ -19,7 +20,7 @@ export default function Accounting() {
   const [courses, setCourses] = useState([]);
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/courses")
+    fetch(`${API_BASE_URL}/api/courses`)
       .then((res) => res.json())
       .then((data) => {
         // Filter so this page only shows Accounting courses

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_BASE_URL } from "../api";
 import { Plus, List, Loader2, Trash2, Edit, Save, FolderPlus, AlignLeft, Link as LinkIcon, Type, ImageIcon } from 'lucide-react';
 
 export default function CourseCatagoryManager() {
@@ -20,7 +21,7 @@ export default function CourseCatagoryManager() {
 
   const fetchCategories = async () => {
     try {
-      const res = await fetch("http://localhost:5000/api/categories");
+      const res = await fetch(`${API_BASE_URL}/api/categories`);
       const data = await res.json();
       if (Array.isArray(data)) {
         setCategories(data);
@@ -45,7 +46,7 @@ export default function CourseCatagoryManager() {
     const generatedSlug = formData.name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-');
 
     try {
-      const url = editingId ? `http://localhost:5000/api/categories/${editingId}` : "http://localhost:5000/api/categories";
+      const url = editingId ? `${API_BASE_URL}/api/categories/${editingId}` : `${API_BASE_URL}/api/categories`;
       const method = editingId ? "PUT" : "POST";
 
       const res = await fetch(url, {
@@ -96,7 +97,7 @@ export default function CourseCatagoryManager() {
   const handleDelete = async (id, name) => {
     if (!window.confirm(`Delete "${name}" category?`)) return;
     try {
-      const res = await fetch(`http://localhost:5000/api/categories/${id}`, { method: "DELETE" });
+      const res = await fetch(`${API_BASE_URL}/api/categories/${id}`, { method: "DELETE" });
       const result = await res.json();
       if (result.success || res.ok) {
         setCategories(categories.filter(cat => cat._id !== id));

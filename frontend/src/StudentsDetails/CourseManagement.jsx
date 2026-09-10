@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { API_BASE } from "../api";
 import { Plus, Trash2, Save, BookOpen, Layers, ImageIcon, FileText, Clock, Tag, AlignLeft, Edit, X, Award, Search } from "lucide-react";
 
 export default function CourseManagement() {
@@ -14,8 +15,6 @@ export default function CourseManagement() {
   const [syllabus, setSyllabus] = useState([""]);
   const [certifications, setCertifications] = useState([""]);
   const [dynamicCategories, setDynamicCategories] = useState([]);
-
-  const API_BASE = "http://localhost:5000/api";
 
   const fetchCourses = () => {
     fetch(`${API_BASE}/courses`)

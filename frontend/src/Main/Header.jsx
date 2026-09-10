@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Info, Phone, Users, MapPin, BookOpen, MessageCircleQuestionMark, ChevronDown, LayoutGrid, 
   User, Settings, LogOut, Menu, X, Gamepad2, Trophy, MessageSquareDot } from "lucide-react";
 import { Link } from "react-router-dom";
+import { API_BASE_URL } from "../api";
 
 export default function HeaderSection() {
   const [isVisible, setIsVisible] = useState(true);
@@ -52,7 +53,7 @@ export default function HeaderSection() {
     setIsAdmin(!!token);
 
     // 2. Fetch categories from your backend
-    fetch("http://localhost:5000/api/categories")
+    fetch(`${API_BASE_URL}/api/categories`)
       .then(res => res.json())
       .then(data => {
         // ✅ SAFETY CHECK: Only save it if it's an actual array list

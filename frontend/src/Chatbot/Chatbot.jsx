@@ -3,6 +3,7 @@ import { MessageCircle, X, Send } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import LottieBase from "lottie-react";
 import { useLottie } from "lottie-react";
+import { API_BASE_URL } from "../api";
 import successAnimation from "../assets/Female.json"; 
 import errorAnimation from "../assets/Thinking.json";
 import gaming from "../assets/Chatbot.json";
@@ -69,7 +70,7 @@ export default function Chatbot() {
     e.preventDefault();
     try {
       // FIXED BUG: Changed from /api/enquiries to /api/chatbot to match adress.js
-      const response = await fetch('http://localhost:5000/api/chatbot', {
+      const response = await fetch(`${API_BASE_URL}/api/chatbot`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData), 

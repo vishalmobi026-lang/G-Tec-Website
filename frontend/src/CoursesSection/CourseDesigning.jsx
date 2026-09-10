@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, Clock, X, CheckCircle2, Calendar, BookOpen, Award } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { API_BASE_URL } from "../api";
 export default function Designing() {
   const location=useLocation();
   const navigate = useNavigate();
@@ -10,7 +11,7 @@ export default function Designing() {
     const [courses, setCourses] = useState([]);
   
     useEffect(() => {
-      fetch("http://localhost:5000/api/courses")
+      fetch(`${API_BASE_URL}/api/courses`)
         .then((res) => res.json())
         .then((data) => {
           // Filter so this page only shows Accounting courses

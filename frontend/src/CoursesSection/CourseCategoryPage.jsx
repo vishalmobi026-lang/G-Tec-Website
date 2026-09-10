@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate, useLocation, useParams } from "react-router-dom";
+import { API_BASE_URL } from "../api";
 import {
   ArrowRight,
   Clock,
@@ -32,7 +33,7 @@ export default function CourseCategoryPage() {
   useEffect(() => {
     window.scrollTo(0, 0); // Scroll to top on category change
     
-    fetch("http://localhost:5000/api/courses")
+    fetch(`${API_BASE_URL}/api/courses`)
       .then((res) => res.json())
       .then((data) => {
         const filteredCourses = data.filter((c) => c.category === categorySlug);
